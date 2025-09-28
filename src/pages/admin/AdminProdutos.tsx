@@ -270,15 +270,17 @@ export default function AdminProdutos() {
               ))}
             </div>
 
-        {products.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Nenhum produto encontrado</p>
-            <Button onClick={() => openDialog()} className="mt-4">
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Primeiro Produto
-            </Button>
+            {products.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Nenhum produto encontrado</p>
+                <Button onClick={() => openDialog()} className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Primeiro Produto
+                </Button>
+              </div>
+            )}
           </div>
-        )}
+        </main>
       </div>
 
       {/* Dialog Criar/Editar */}
