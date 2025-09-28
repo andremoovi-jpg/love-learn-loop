@@ -49,21 +49,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadUserProfile = async (userId: string) => {
     setProfileLoading(true);
     try {
-      const [profileResult, adminResult] = await Promise.allSettled([
-        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-        supabase.from('admin_users').select('*').eq('user_id', userId).maybeSingle()
-      ]);
+      console.log('🔍 Carregando perfil do usuário:', userId);
 
-      let profileData = null;
-      let isAdmin = false;
+      // Verificar se usuário é admin na tabela admin_users
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin_users')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-        profileData = profileResult.value.data;
-      }
+      const isAdmin = adminData?.role === 'admin';
+      console.log('👑 Status admin verificado:', { isAdmin, adminData });
 
-      if (adminResult.status === 'fulfilled' && adminResult.value.data) {
-        isAdmin = true;
-      }
+      // Buscar dados do perfil na tabela profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      console.log('📋 Dados do perfil:', { profileData, profileError });
 
       // Update user state with profile data
       setUser(currentUser => {
