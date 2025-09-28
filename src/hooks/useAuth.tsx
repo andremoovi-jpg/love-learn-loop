@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const navigate = useNavigate();
 
   const enrichUserWithProfile = async (supabaseUser: any): Promise<User> => {
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loadUserProfile = async (userId: string) => {
+    setProfileLoading(true);
     try {
       const [profileResult, adminResult] = await Promise.allSettled([
         supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
@@ -79,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error('❌ Error loading profile (non-blocking):', error);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -219,7 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       session, 
-      loading, 
+      loading: loading || profileLoading, 
       signUp, 
       signIn, 
       signOut,
