@@ -365,6 +365,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_leads_with_password: {
         Args: { password_input: string }
         Returns: {
