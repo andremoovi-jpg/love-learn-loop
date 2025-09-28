@@ -22,6 +22,7 @@ export interface Product {
   content?: any;
   progress?: number;
   is_active?: boolean;
+  cartpanda_product_id?: string;
   created_at?: string;
   updated_at?: string;
 }

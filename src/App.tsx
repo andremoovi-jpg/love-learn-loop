@@ -14,6 +14,11 @@ import Ofertas from "./pages/Ofertas";
 import Perfil from "./pages/Perfil";
 import Conquistas from "./pages/Conquistas";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsuarios from "./pages/admin/AdminUsuarios";
+import AdminProdutos from "./pages/admin/AdminProdutos";
+import AdminUpsells from "./pages/admin/AdminUpsells";
+import AdminRelatorios from "./pages/admin/AdminRelatorios";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +68,33 @@ const App = () => (
             <Route path="/conquistas" element={
               <ProtectedRoute>
                 <Conquistas />
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/usuarios" element={
+              <ProtectedRoute requireAdmin>
+                <AdminUsuarios />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/produtos" element={
+              <ProtectedRoute requireAdmin>
+                <AdminProdutos />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/upsells" element={
+              <ProtectedRoute requireAdmin>
+                <AdminUpsells />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/relatorios" element={
+              <ProtectedRoute requireAdmin>
+                <AdminRelatorios />
               </ProtectedRoute>
             } />
             

@@ -9,7 +9,11 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  UserCog,
+  Package,
+  TrendingUp,
+  BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,7 +30,11 @@ const navigation = [
 ];
 
 const adminNavigation = [
-  { name: "Admin", href: "/admin", icon: Settings },
+  { name: "Dashboard", href: "/admin", icon: Settings },
+  { name: "Usuários", href: "/admin/usuarios", icon: UserCog },
+  { name: "Produtos", href: "/admin/produtos", icon: Package },
+  { name: "Upsells", href: "/admin/upsells", icon: TrendingUp },
+  { name: "Relatórios", href: "/admin/relatorios", icon: BarChart3 },
 ];
 
 export function Sidebar() {
