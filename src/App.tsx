@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
+import Cadastrar from "./pages/Cadastrar";
 import Dashboard from "./pages/Dashboard";
 import MeusProdutos from "./pages/MeusProdutos";
 import Produto from "./pages/Produto";
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/cadastrar" element={<Cadastrar />} />
             
             {/* Protected Routes */}
             <Route path="/" element={

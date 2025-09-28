@@ -8,42 +8,117 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function Login() {
+export default function Cadastrar() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user, login } = useAuth();
+  const { user, signUp } = useAuth();
   const { toast } = useToast();
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
+  const validateForm = () => {
+    if (!fullName.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha seu nome completo.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!email.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha seu email.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!email.includes("@")) {
+      toast({
+        title: "Erro",
+        description: "Por favor, digite um email válido.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
+    if (!validateForm()) {
       return;
     }
 
     setLoading(true);
     
     try {
-      await login(email, password);
-      toast({
-        title: "Sucesso",
-        description: "Login realizado com sucesso!",
-      });
-    } catch (error) {
+      const { error } = await signUp(email, password, fullName);
+      
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast({
+            title: "Erro",
+            description: "Este email já está cadastrado. Tente fazer login.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Password should be at least')) {
+          toast({
+            title: "Erro",
+            description: "A senha deve ter pelo menos 6 caracteres.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro",
+            description: error.message || "Erro ao criar conta. Tente novamente.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Verifique seu email para confirmar sua conta. Após confirmar, você poderá fazer login.",
+        });
+        // Reset form
+        setFullName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+      }
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Credenciais inválidas. Tente novamente.",
+        description: "Erro inesperado ao criar conta. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -60,21 +135,35 @@ export default function Login() {
             MemberLovs
           </h1>
           <p className="text-muted-foreground">
-            Faça login para acessar sua área de membros
+            Crie sua conta para acessar nossa área de membros
           </p>
         </div>
 
-        {/* Login Form */}
+        {/* Signup Form */}
         <Card className="shadow-medium border-border/50">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold">Entrar</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Criar Conta</CardTitle>
             <CardDescription>
-              Digite seu email e senha para acessar sua conta
+              Preencha os dados abaixo para criar sua conta
             </CardDescription>
           </CardHeader>
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nome Completo</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="transition-base focus:ring-primary/20"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -119,14 +208,33 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="text-sm">
-                  <Link
-                    to="/forgot-password"
-                    className="font-medium text-primary hover:text-primary/80 transition-base"
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={loading}
+                    required
+                    className="pr-10 transition-base focus:ring-primary/20"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={loading}
                   >
-                    Esqueceu a senha?
-                  </Link>
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
                 </div>
               </div>
 
@@ -138,22 +246,22 @@ export default function Login() {
                 {loading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                    <span>Entrando...</span>
+                    <span>Criando conta...</span>
                   </div>
                 ) : (
-                  "Entrar"
+                  "Criar Conta"
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Não tem uma conta?{" "}
+                Já tem uma conta?{" "}
                 <Link
-                  to="/cadastrar"
+                  to="/login"
                   className="font-medium text-primary hover:text-primary/80 transition-base"
                 >
-                  Criar conta
+                  Entre aqui
                 </Link>
               </p>
             </div>
