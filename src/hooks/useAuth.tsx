@@ -32,18 +32,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('user_id', supabaseUser.id)
-        .single();
+        .maybeSingle();
 
       console.log('👤 Profile query resultado:', { profile, profileError });
+
+      if (profileError) {
+        console.error('❌ Erro na query de profile:', profileError);
+      }
 
       console.log('👑 Fazendo query para admin_users...');
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('user_id', supabaseUser.id)
-        .single();
+        .maybeSingle();
 
       console.log('👑 Admin query resultado:', { adminUser, adminError });
+
+      if (adminError) {
+        console.error('❌ Erro na query de admin:', adminError);
+      }
 
       console.log('🔧 Construindo enriched user...');
       const enrichedUser = {
