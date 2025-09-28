@@ -270,10 +270,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "upsells_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "upsells_upsell_product_id_fkey"
             columns: ["upsell_product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upsells_upsell_product_id_fkey"
+            columns: ["upsell_product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
             referencedColumns: ["id"]
           },
         ]
@@ -358,6 +372,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_upsell_views: {
@@ -433,7 +454,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      products_public: {
+        Row: {
+          content: Json | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          estimated_duration: string | null
+          id: string | null
+          is_active: boolean | null
+          level: string | null
+          name: string | null
+          product_type: string | null
+          slug: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content?: never
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_duration?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          name?: string | null
+          product_type?: string | null
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: never
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_duration?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          name?: string | null
+          product_type?: string | null
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_admin_user: {
@@ -451,8 +516,30 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      get_product_with_access_control: {
+        Args: { product_slug: string }
+        Returns: {
+          content: Json
+          cover_image_url: string
+          created_at: string
+          description: string
+          estimated_duration: string
+          has_access: boolean
+          id: string
+          is_active: boolean
+          level: string
+          name: string
+          product_type: string
+          slug: string
+          updated_at: string
+        }[]
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      user_has_purchased_product: {
+        Args: { product_id: string }
         Returns: boolean
       }
     }
