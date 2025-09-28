@@ -25,56 +25,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   const enrichUserWithProfile = async (supabaseUser: any): Promise<User> => {
-    console.log('🔍 Enriching user profile for:', supabaseUser.id);
+    console.log('🔍 Simplifying user profile for:', supabaseUser.id);
+    
+    // Simplified approach - no complex queries that can hang
+    const enrichedUser = {
+      ...supabaseUser,
+      full_name: supabaseUser.user_metadata?.full_name || 'Usuário',
+      total_points: 0,
+      is_admin: false
+    };
+
+    console.log('✅ Simplified user ready:', enrichedUser.email);
+    
+    // Load profile data asynchronously after auth is complete
+    setTimeout(() => {
+      loadUserProfile(supabaseUser.id);
+    }, 100);
+    
+    return enrichedUser;
+  };
+
+  const loadUserProfile = async (userId: string) => {
     try {
-      console.log('📊 Fazendo query para profiles...');
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', supabaseUser.id)
-        .maybeSingle();
+      console.log('🔄 Loading profile data for:', userId);
+      
+      const [profileResult, adminResult] = await Promise.allSettled([
+        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('admin_users').select('*').eq('user_id', userId).maybeSingle()
+      ]);
 
-      console.log('👤 Profile query resultado:', { profile, profileError });
+      let profileData = null;
+      let isAdmin = false;
 
-      if (profileError) {
-        console.error('❌ Erro na query de profile:', profileError);
+      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+        profileData = profileResult.value.data;
       }
 
-      console.log('👑 Fazendo query para admin_users...');
-      const { data: adminUser, error: adminError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', supabaseUser.id)
-        .maybeSingle();
-
-      console.log('👑 Admin query resultado:', { adminUser, adminError });
-
-      if (adminError) {
-        console.error('❌ Erro na query de admin:', adminError);
+      if (adminResult.status === 'fulfilled' && adminResult.value.data) {
+        isAdmin = true;
       }
 
-      console.log('🔧 Construindo enriched user...');
-      const enrichedUser = {
-        ...supabaseUser,
-        full_name: profile?.full_name || supabaseUser.user_metadata?.full_name,
-        avatar_url: profile?.avatar_url,
-        phone: profile?.phone,
-        total_points: profile?.total_points || 0,
-        is_admin: !!adminUser
-      };
+      // Update user state with profile data
+      setUser(currentUser => {
+        if (currentUser && currentUser.id === userId) {
+          return {
+            ...currentUser,
+            full_name: profileData?.full_name || currentUser.user_metadata?.full_name || 'Usuário',
+            avatar_url: profileData?.avatar_url,
+            phone: profileData?.phone,
+            total_points: profileData?.total_points || 0,
+            is_admin: isAdmin
+          };
+        }
+        return currentUser;
+      });
 
-      console.log('✅ Enriched user construído:', enrichedUser);
-      return enrichedUser;
+      console.log('✅ Profile data loaded successfully');
     } catch (error) {
-      console.error('❌ Error enriching user profile:', error);
-      const fallbackUser = {
-        ...supabaseUser,
-        full_name: supabaseUser.user_metadata?.full_name,
-        total_points: 0,
-        is_admin: false
-      };
-      console.log('🔄 Fallback user:', fallbackUser);
-      return fallbackUser;
+      console.error('❌ Error loading profile (non-blocking):', error);
     }
   };
 
@@ -89,33 +97,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         clearTimeout(safetyTimeout);
         console.log('🔄 Auth state change:', event, 'Session:', !!session);
         setSession(session);
+        
         if (session?.user) {
-          console.log('👤 User found, enriching profile...');
-          try {
-            const enrichedUser = await enrichUserWithProfile(session.user);
-            setUser(enrichedUser);
-          } catch (error) {
-            console.error('❌ Error enriching user in state change:', error);
-            setUser({
-              ...session.user,
-              full_name: session.user.user_metadata?.full_name,
-              total_points: 0,
-              is_admin: false
-            });
-          }
+          console.log('👤 User found, setting basic profile...');
+          
+          // Set user immediately with basic data
+          const basicUser = {
+            ...session.user,
+            full_name: session.user.user_metadata?.full_name || 'Usuário',
+            total_points: 0,
+            is_admin: false
+          };
+          
+          setUser(basicUser);
+          
+          // Load full profile data asynchronously
+          setTimeout(() => {
+            loadUserProfile(session.user.id);
+          }, 100);
         } else {
           console.log('❌ No user session');
           setUser(null);
         }
+        
         console.log('✅ Setting loading to false from state change');
         setLoading(false);
         
         if (event === 'SIGNED_IN' && session) {
-          navigate('/dashboard');
+          console.log('🎯 Redirecting to dashboard...');
+          setTimeout(() => navigate('/dashboard'), 500);
         }
         if (event === 'SIGNED_OUT') {
           navigate('/login');
@@ -125,28 +139,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     console.log('🔍 Checking for existing session...');
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       clearTimeout(safetyTimeout);
       console.log('📋 Session check result:', !!session, 'Error:', error);
       setSession(session);
+      
       if (session?.user) {
-        console.log('👤 Existing user found, enriching profile...');
-        try {
-          const enrichedUser = await enrichUserWithProfile(session.user);
-          setUser(enrichedUser);
-        } catch (error) {
-          console.error('❌ Error enriching existing user:', error);
-          setUser({
-            ...session.user,
-            full_name: session.user.user_metadata?.full_name,
-            total_points: 0,
-            is_admin: false
-          });
-        }
+        console.log('👤 Existing user found, setting basic profile...');
+        
+        // Set user immediately with basic data
+        const basicUser = {
+          ...session.user,
+          full_name: session.user.user_metadata?.full_name || 'Usuário',
+          total_points: 0,
+          is_admin: false
+        };
+        
+        setUser(basicUser);
+        
+        // Load full profile data asynchronously
+        setTimeout(() => {
+          loadUserProfile(session.user.id);
+        }, 100);
       } else {
         console.log('❌ No existing session');
         setUser(null);
       }
+      
       console.log('✅ Initial loading complete');
       setLoading(false);
     }).catch((error) => {
