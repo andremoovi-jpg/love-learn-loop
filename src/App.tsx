@@ -14,6 +14,7 @@ import Produto from "./pages/Produto";
 import Ofertas from "./pages/Ofertas";
 import Perfil from "./pages/Perfil";
 import Conquistas from "./pages/Conquistas";
+import Comunidade from "./pages/Comunidade";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
@@ -70,6 +71,11 @@ const App = () => (
             <Route path="/conquistas" element={
               <ProtectedRoute>
                 <Conquistas />
+              </ProtectedRoute>
+            } />
+            <Route path="/comunidade" element={
+              <ProtectedRoute>
+                <Comunidade />
               </ProtectedRoute>
             } />
             
