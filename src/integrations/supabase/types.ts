@@ -460,8 +460,8 @@ export type Database = {
           created_at: string | null
           description: string | null
           estimated_duration: string | null
-          has_full_access: boolean | null
           id: string | null
+          is_active: boolean | null
           level: string | null
           name: string | null
           product_type: string | null
@@ -473,8 +473,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           estimated_duration?: string | null
-          has_full_access?: never
           id?: string | null
+          is_active?: boolean | null
           level?: string | null
           name?: string | null
           product_type?: string | null
@@ -486,8 +486,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           estimated_duration?: string | null
-          has_full_access?: never
           id?: string | null
+          is_active?: boolean | null
           level?: string | null
           name?: string | null
           product_type?: string | null
@@ -498,6 +498,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_product_content: {
+        Args: { product_id: string }
+        Returns: boolean
+      }
       create_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: undefined
