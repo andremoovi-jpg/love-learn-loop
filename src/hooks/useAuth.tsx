@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update user state with profile data
       setUser(currentUser => {
         if (currentUser && currentUser.id === userId) {
-          return {
+          const updatedUser = {
             ...currentUser,
             full_name: profileData?.full_name || currentUser.user_metadata?.full_name || 'Usuário',
             avatar_url: profileData?.avatar_url,
@@ -76,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             total_points: profileData?.total_points || 0,
             is_admin: isAdmin
           };
+          
+          console.log('✅ Updated user with admin status:', isAdmin);
+          return updatedUser;
         }
         return currentUser;
       });

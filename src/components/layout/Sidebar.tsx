@@ -43,6 +43,13 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Debug: Log user admin status
+  console.log('🔍 Sidebar - User admin status:', {
+    hasUser: !!user,
+    isAdmin: user?.is_admin,
+    email: user?.email
+  });
+
   const handleLogout = () => {
     logout();
   };
@@ -114,7 +121,10 @@ export function Sidebar() {
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                   }`
                 }
-                onClick={() => setIsMobileOpen(false)}
+                onClick={(e) => {
+                  console.log('🖱️ Admin link clicked:', item.href, item.name);
+                  setIsMobileOpen(false);
+                }}
               >
                 <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
                 {item.name}

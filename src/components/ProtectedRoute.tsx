@@ -4,10 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requireAdmin?: boolean;
 }
 
-export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -23,23 +22,8 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   }
 
   if (!user) {
-    console.log('🚫 ProtectedRoute: Usuário não encontrado, redirecionando para login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requireAdmin && !user.is_admin) {
-    console.log('🚫 ProtectedRoute: Usuário não é admin:', { 
-      requireAdmin, 
-      userIsAdmin: user.is_admin, 
-      userEmail: user.email,
-      path: location.pathname 
-    });
-    return <Navigate to="/" replace />;
-  }
-
-  console.log('✅ ProtectedRoute: Acesso permitido para:', location.pathname, { 
-    requireAdmin, 
-    userIsAdmin: user.is_admin 
-  });
   return <>{children}</>;
 }

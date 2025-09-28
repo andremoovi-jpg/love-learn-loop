@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import Login from "./pages/Login";
 import Cadastrar from "./pages/Cadastrar";
 import Dashboard from "./pages/Dashboard";
@@ -72,35 +73,47 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Admin Routes */}
+            {/* Admin Routes - ESTRUTURA CORRIGIDA */}
             <Route path="/admin" element={
-              <ProtectedRoute requireAdmin>
-                <AdminDashboard />
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
               </ProtectedRoute>
             } />
             <Route path="/admin/usuarios" element={
-              <ProtectedRoute requireAdmin>
-                <AdminUsuarios />
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminUsuarios />
+                </AdminRoute>
               </ProtectedRoute>
             } />
             <Route path="/admin/produtos" element={
-              <ProtectedRoute requireAdmin>
-                <AdminProdutos />
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminProdutos />
+                </AdminRoute>
               </ProtectedRoute>
             } />
             <Route path="/admin/upsells" element={
-              <ProtectedRoute requireAdmin>
-                <AdminUpsells />
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminUpsells />
+                </AdminRoute>
               </ProtectedRoute>
             } />
             <Route path="/admin/relatorios" element={
-              <ProtectedRoute requireAdmin>
-                <AdminRelatorios />
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminRelatorios />
+                </AdminRoute>
               </ProtectedRoute>
             } />
             <Route path="/admin/webhooks" element={
-              <ProtectedRoute requireAdmin>
-                <AdminWebhooks />
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminWebhooks />
+                </AdminRoute>
               </ProtectedRoute>
             } />
             
