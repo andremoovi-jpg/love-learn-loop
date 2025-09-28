@@ -11,7 +11,17 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  console.log('🛡️ ProtectedRoute check:', {
+    loading,
+    user: !!user,
+    userEmail: user?.email,
+    isAdmin: user?.is_admin,
+    requireAdmin,
+    path: location.pathname
+  });
+
   if (loading) {
+    console.log('⏳ Still loading, showing spinner...');
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center space-y-4">
@@ -23,12 +33,15 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   }
 
   if (!user) {
+    console.log('❌ No user found, redirecting to login from:', location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !user.is_admin) {
+    console.log('🚫 User not admin, redirecting to dashboard. User admin status:', user.is_admin);
     return <Navigate to="/dashboard" replace />;
   }
 
+  console.log('✅ Access granted to:', location.pathname);
   return <>{children}</>;
 }

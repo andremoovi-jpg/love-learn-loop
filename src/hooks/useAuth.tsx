@@ -63,12 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (adminResult.status === 'fulfilled' && adminResult.value.data) {
         isAdmin = true;
+        console.log('👑 User is admin:', userId);
       }
 
       // Update user state with profile data
       setUser(currentUser => {
         if (currentUser && currentUser.id === userId) {
-          return {
+          const updatedUser = {
             ...currentUser,
             full_name: profileData?.full_name || currentUser.user_metadata?.full_name || 'Usuário',
             avatar_url: profileData?.avatar_url,
@@ -76,11 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             total_points: profileData?.total_points || 0,
             is_admin: isAdmin
           };
+          console.log('✅ Updated user with admin status:', updatedUser.is_admin);
+          return updatedUser;
         }
         return currentUser;
       });
 
-      console.log('✅ Profile data loaded successfully');
+      console.log('✅ Profile data loaded successfully, is_admin:', isAdmin);
     } catch (error) {
       console.error('❌ Error loading profile (non-blocking):', error);
     }
@@ -113,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             is_admin: false
           };
           
+          console.log('👤 Setting basic user:', basicUser.email, 'ID:', basicUser.id);
           setUser(basicUser);
           
           // Load full profile data asynchronously
