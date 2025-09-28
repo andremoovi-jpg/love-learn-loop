@@ -27,22 +27,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const enrichUserWithProfile = async (supabaseUser: any): Promise<User> => {
     console.log('🔍 Enriching user profile for:', supabaseUser.id);
     try {
+      console.log('📊 Fazendo query para profiles...');
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', supabaseUser.id)
         .single();
 
-      console.log('👤 Profile data:', profile, 'Error:', profileError);
+      console.log('👤 Profile query resultado:', { profile, profileError });
 
+      console.log('👑 Fazendo query para admin_users...');
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('user_id', supabaseUser.id)
         .single();
 
-      console.log('👑 Admin data:', adminUser, 'Error:', adminError);
+      console.log('👑 Admin query resultado:', { adminUser, adminError });
 
+      console.log('🔧 Construindo enriched user...');
       const enrichedUser = {
         ...supabaseUser,
         full_name: profile?.full_name || supabaseUser.user_metadata?.full_name,
@@ -52,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         is_admin: !!adminUser
       };
 
-      console.log('✅ Enriched user:', enrichedUser);
+      console.log('✅ Enriched user construído:', enrichedUser);
       return enrichedUser;
     } catch (error) {
       console.error('❌ Error enriching user profile:', error);
