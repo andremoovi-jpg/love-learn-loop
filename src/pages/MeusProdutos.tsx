@@ -67,7 +67,17 @@ export default function MeusProdutos() {
         .from('user_products')
         .select(`
           *,
-          product:products(*)
+          product:products(
+            id,
+            name,
+            slug,
+            description,
+            cover_image_url,
+            product_type,
+            level,
+            estimated_duration,
+            content
+          )
         `)
         .eq('user_id', user!.id)
         .order('purchased_at', { ascending: false });

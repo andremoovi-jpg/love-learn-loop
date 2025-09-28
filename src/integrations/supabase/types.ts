@@ -456,13 +456,12 @@ export type Database = {
     Views: {
       products_public: {
         Row: {
-          content: Json | null
           cover_image_url: string | null
           created_at: string | null
           description: string | null
           estimated_duration: string | null
+          has_full_access: boolean | null
           id: string | null
-          is_active: boolean | null
           level: string | null
           name: string | null
           product_type: string | null
@@ -470,13 +469,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          content?: never
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           estimated_duration?: string | null
+          has_full_access?: never
           id?: string | null
-          is_active?: boolean | null
           level?: string | null
           name?: string | null
           product_type?: string | null
@@ -484,13 +482,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          content?: never
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           estimated_duration?: string | null
+          has_full_access?: never
           id?: string | null
-          is_active?: boolean | null
           level?: string | null
           name?: string | null
           product_type?: string | null

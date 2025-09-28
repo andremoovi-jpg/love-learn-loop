@@ -20,6 +20,7 @@ interface Product {
   description: string;
   cover_image_url: string;
   content: any;
+  has_access: boolean; // New field from secure function
 }
 
 interface UserProduct {
@@ -46,30 +47,41 @@ export default function Produto() {
 
   const fetchProductData = async () => {
     try {
-      // Fetch product
-      const { data: productData } = await supabase
-        .from('products')
-        .select('*')
-        .eq('slug', slug)
-        .single();
+      // Use secure function to get product with proper access control
+      const { data: productData, error: productError } = await supabase
+        .rpc('get_product_with_access_control', { product_slug: slug });
 
-      if (!productData) {
+      if (productError) {
+        console.error('Error fetching product:', productError);
         setLoading(false);
         return;
       }
 
-      setProduct(productData);
+      if (!productData || productData.length === 0) {
+        setLoading(false);
+        return;
+      }
 
-      // Fetch user's product access
+      const product = productData[0];
+      setProduct(product);
+
+      // Only proceed with user product checks if user has access to content
+      if (!product.has_access) {
+        // User doesn't have access - show restricted access page
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user's product access for progress tracking
       const { data: userProductData } = await supabase
         .from('user_products')
         .select('*')
         .eq('user_id', user!.id)
-        .eq('product_id', productData.id)
+        .eq('product_id', product.id)
         .single();
 
       if (!userProductData) {
-        // User doesn't have access to this product
+        // This shouldn't happen if has_access is true, but handle gracefully
         setLoading(false);
         return;
       }
@@ -90,7 +102,7 @@ export default function Produto() {
           parent_product:products!parent_product_id(name),
           upsell_product:products!upsell_product_id(name, cover_image_url, product_type)
         `)
-        .eq('parent_product_id', productData.id)
+        .eq('parent_product_id', product.id)
         .eq('is_active', true);
 
       setUpsells(upsellsData || []);
@@ -209,14 +221,14 @@ export default function Produto() {
         <div className="lg:pl-64">
           <TopBar breadcrumbs={[
             { label: "Dashboard", href: "/dashboard" },
-            { label: product.name }
+            { label: product?.name || "Produto" }
           ]} />
           <main className="p-6">
             <div className="text-center py-12">
               <Lock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-2xl font-bold mb-4">Acesso Restrito</h2>
               <p className="text-muted-foreground">
-                Você não tem acesso a este produto. Entre em contato com o suporte.
+                Você não tem acesso a este produto. {product?.name ? 'Entre em contato com o suporte para adquirir este produto.' : ''}
               </p>
             </div>
           </main>
