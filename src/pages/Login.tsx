@@ -23,6 +23,8 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔄 Iniciando login para:', email);
+    
     if (!email || !password) {
       toast({
         title: "Erro",
@@ -35,18 +37,33 @@ export default function Login() {
     setLoading(true);
     
     try {
-      await login(email, password);
-      toast({
-        title: "Sucesso",
-        description: "Login realizado com sucesso!",
-      });
+      console.log('🔄 Chamando função login...');
+      const result = await login(email, password);
+      console.log('🔄 Resultado do login:', result);
+      
+      if (result.error) {
+        console.error('❌ Erro retornado pelo login:', result.error);
+        toast({
+          title: "Erro",
+          description: "Credenciais inválidas. Tente novamente.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('✅ Login bem-sucedido!');
+        toast({
+          title: "Sucesso",
+          description: "Login realizado com sucesso!",
+        });
+      }
     } catch (error) {
+      console.error('❌ Erro no catch do handleSubmit:', error);
       toast({
         title: "Erro",
         description: "Credenciais inválidas. Tente novamente.",
         variant: "destructive",
       });
     } finally {
+      console.log('🔄 Resetando loading...');
       setLoading(false);
     }
   };

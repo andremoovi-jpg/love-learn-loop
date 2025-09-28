@@ -174,16 +174,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      toast.error('Credenciais inválidas');
-    }
+    console.log('🔐 SignIn iniciado para:', email);
     
-    return { error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      console.log('🔐 Resposta do Supabase:', { data: !!data, error });
+
+      if (error) {
+        console.error('❌ Erro de login:', error);
+        toast.error('Credenciais inválidas');
+        throw error;
+      }
+
+      console.log('✅ Login bem-sucedido, usuário:', data.user?.email);
+      return { error: null };
+    } catch (error) {
+      console.error('❌ Erro no catch do signIn:', error);
+      return { error };
+    }
   };
 
   const signOut = async () => {
