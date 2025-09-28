@@ -47,8 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      console.log('🔄 Loading profile data for:', userId);
-      
       const [profileResult, adminResult] = await Promise.allSettled([
         supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('admin_users').select('*').eq('user_id', userId).maybeSingle()
@@ -63,13 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (adminResult.status === 'fulfilled' && adminResult.value.data) {
         isAdmin = true;
-        console.log('👑 User is admin:', userId);
       }
 
       // Update user state with profile data
       setUser(currentUser => {
         if (currentUser && currentUser.id === userId) {
-          const updatedUser = {
+          return {
             ...currentUser,
             full_name: profileData?.full_name || currentUser.user_metadata?.full_name || 'Usuário',
             avatar_url: profileData?.avatar_url,
@@ -77,38 +74,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             total_points: profileData?.total_points || 0,
             is_admin: isAdmin
           };
-          console.log('✅ Updated user with admin status:', updatedUser.is_admin);
-          return updatedUser;
         }
         return currentUser;
       });
-
-      console.log('✅ Profile data loaded successfully, is_admin:', isAdmin);
     } catch (error) {
       console.error('❌ Error loading profile (non-blocking):', error);
     }
   };
 
   useEffect(() => {
-    console.log('🚀 Auth hook initializing...');
-    
-    // Timeout de segurança para evitar loading infinito
-    const safetyTimeout = setTimeout(() => {
-      console.log('⚠️ Safety timeout - setting loading to false');
-      setLoading(false);
-    }, 10000); // 10 segundos
+    let profileLoaded = false;
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        clearTimeout(safetyTimeout);
-        console.log('🔄 Auth state change:', event, 'Session:', !!session);
         setSession(session);
         
         if (session?.user) {
-          console.log('👤 User found, setting basic profile...');
-          
-          // Set user immediately with basic data
+          // Set user with basic data first
           const basicUser = {
             ...session.user,
             full_name: session.user.user_metadata?.full_name || 'Usuário',
@@ -116,23 +99,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             is_admin: false
           };
           
-          console.log('👤 Setting basic user:', basicUser.email, 'ID:', basicUser.id);
           setUser(basicUser);
           
-          // Load full profile data asynchronously
-          setTimeout(() => {
-            loadUserProfile(session.user.id);
-          }, 100);
+          // Load profile data only once
+          if (!profileLoaded) {
+            profileLoaded = true;
+            setTimeout(() => {
+              loadUserProfile(session.user.id);
+            }, 100);
+          }
         } else {
-          console.log('❌ No user session');
           setUser(null);
+          profileLoaded = false;
         }
         
-        console.log('✅ Setting loading to false from state change');
         setLoading(false);
         
         if (event === 'SIGNED_IN' && session) {
-          console.log('🎯 Redirecting to dashboard...');
           setTimeout(() => navigate('/dashboard'), 500);
         }
         if (event === 'SIGNED_OUT') {
@@ -141,17 +124,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
-    console.log('🔍 Checking for existing session...');
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      clearTimeout(safetyTimeout);
-      console.log('📋 Session check result:', !!session, 'Error:', error);
       setSession(session);
       
       if (session?.user) {
-        console.log('👤 Existing user found, setting basic profile...');
-        
-        // Set user immediately with basic data
         const basicUser = {
           ...session.user,
           full_name: session.user.user_metadata?.full_name || 'Usuário',
@@ -161,25 +138,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(basicUser);
         
-        // Load full profile data asynchronously
-        setTimeout(() => {
-          loadUserProfile(session.user.id);
-        }, 100);
+        // Load profile data only once
+        if (!profileLoaded) {
+          profileLoaded = true;
+          setTimeout(() => {
+            loadUserProfile(session.user.id);
+          }, 100);
+        }
       } else {
-        console.log('❌ No existing session');
         setUser(null);
       }
       
-      console.log('✅ Initial loading complete');
       setLoading(false);
     }).catch((error) => {
-      clearTimeout(safetyTimeout);
       console.error('❌ Error getting session:', error);
       setLoading(false);
     });
 
     return () => {
-      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, [navigate]);
