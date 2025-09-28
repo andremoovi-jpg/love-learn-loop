@@ -1,4 +1,5 @@
-import { BookOpen, Trophy, Users, TrendingUp, Play, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BookOpen, Trophy, Users, TrendingUp, Play, Clock, Package, Star } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { ProductCard } from "@/components/ui/product-card";
 import { Button } from "@/components/ui/button";
@@ -8,62 +9,71 @@ import { Badge } from "@/components/ui/badge";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
-// Mock data - replace with real Supabase queries
-const mockProducts = [
-  {
-    id: "1",
-    name: "Curso Completo de Marketing Digital",
-    slug: "marketing-digital-completo",
-    description: "Aprenda as estratégias mais avançadas de marketing digital e transforme seu negócio.",
-    cover_image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=225&fit=crop",
-    product_type: "course",
-    total_modules: 12,
-    estimated_duration: "8 horas",
-    level: "Intermediário",
-    progress: 65,
-  },
-  {
-    id: "2", 
-    name: "E-book: Vendas que Convertem",
-    slug: "ebook-vendas-convertem",
-    description: "Guia completo com técnicas comprovadas para aumentar suas conversões.",
-    cover_image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=225&fit=crop",
-    product_type: "ebook",
-    total_modules: 8,
-    estimated_duration: "2 horas",
-    level: "Iniciante",
-    progress: 100,
-  },
-];
-
-const recentActivity = [
-  {
-    id: "1",
-    title: "Concluiu o módulo 'Funis de Vendas'",
-    product: "Marketing Digital Completo",
-    timestamp: "2 horas atrás",
-    type: "completion"
-  },
-  {
-    id: "2",
-    title: "Conquistou o badge 'Primeiro Curso'",
-    product: null,
-    timestamp: "1 dia atrás", 
-    type: "achievement"
-  },
-  {
-    id: "3",
-    title: "Iniciou o curso 'Marketing Digital'",
-    product: "Marketing Digital Completo",
-    timestamp: "3 dias atrás",
-    type: "start"
-  },
-];
+interface UserProduct {
+  id: string;
+  progress: number;
+  last_accessed_at: string;
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    cover_image_url: string;
+    product_type: string;
+    estimated_duration: string;
+    level: string;
+  };
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch user products
+      const { data: userProductsData } = await supabase
+        .from('user_products')
+        .select(`
+          *,
+          product:products(*)
+        `)
+        .eq('user_id', user!.id)
+        .order('last_accessed_at', { ascending: false });
+
+      setUserProducts(userProductsData || []);
+
+      // Fetch user profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user!.id)
+        .single();
+
+      setProfile(profileData);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const avgProgress = userProducts.length > 0 
+    ? Math.round(userProducts.reduce((acc, p) => acc + p.progress, 0) / userProducts.length)
+    : 0;
+
+  const lastProduct = userProducts.find(p => p.progress > 0 && p.progress < 100);
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,27 +102,24 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Produtos Ativos"
-              value="2"
-              icon={BookOpen}
-              trend={{ value: 12, isPositive: true }}
+              value={userProducts.length}
+              icon={Package}
             />
             <StatCard
-              title="Progresso Geral"
-              value="82%"
+              title="Progresso Médio"
+              value={`${avgProgress}%`}
               icon={TrendingUp}
-              trend={{ value: 5, isPositive: true }}
               gradient
             />
             <StatCard
               title="Conquistas"
-              value="7"
+              value="0"
               icon={Trophy}
-              trend={{ value: 2, isPositive: true }}
             />
             <StatCard
               title="Pontos Totais"
-              value={user?.total_points || 0}
-              icon={Users}
+              value={profile?.total_points || 0}
+              icon={Star}
             />
           </div>
 
@@ -130,31 +137,33 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {mockProducts
-                    .filter(p => p.progress > 0 && p.progress < 100)
-                    .map((product) => (
-                    <div key={product.id} className="flex items-center space-x-4 p-4 border border-border/50 rounded-lg hover:bg-muted/30 transition-base">
+                  {lastProduct ? (
+                    <div className="flex items-center space-x-4 p-4 border border-border/50 rounded-lg hover:bg-muted/30 transition-base">
                       <img
-                        src={product.cover_image_url}
-                        alt={product.name}
+                        src={lastProduct.product.cover_image_url}
+                        alt={lastProduct.product.name}
                         className="w-16 h-16 object-cover rounded-lg"
                       />
                       <div className="flex-1 space-y-2">
-                        <h4 className="font-semibold">{product.name}</h4>
+                        <h4 className="font-semibold">{lastProduct.product.name}</h4>
                         <div className="flex items-center justify-between">
-                          <Progress value={product.progress} className="flex-1 mr-4 h-2" />
+                          <Progress value={lastProduct.progress} className="flex-1 mr-4 h-2" />
                           <span className="text-sm text-muted-foreground">
-                            {product.progress}%
+                            {lastProduct.progress}%
                           </span>
                         </div>
                       </div>
                       <Button asChild size="sm" className="gradient-primary">
-                        <Link to={`/produto/${product.slug}`}>
+                        <Link to={`/produto/${lastProduct.product.slug}`}>
                           Continuar
                         </Link>
                       </Button>
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Nenhum produto em andamento
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -168,13 +177,21 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {mockProducts.slice(0, 2).map((product) => (
+                  {userProducts.slice(0, 2).map((userProduct) => (
                     <ProductCard
-                      key={product.id}
-                      product={product}
+                      key={userProduct.id}
+                      product={{
+                        ...userProduct.product,
+                        progress: userProduct.progress
+                      }}
                       showProgress
                     />
                   ))}
+                  {userProducts.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8 col-span-2">
+                      Nenhum produto adquirido ainda
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -191,18 +208,23 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-start space-x-3 text-sm">
-                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                    <div className="flex items-start space-x-3 text-sm">
+                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                      <div className="space-y-1">
+                        <p className="font-medium text-foreground">Bem-vindo à MemberLovs!</p>
+                        <p className="text-xs text-muted-foreground">Hoje</p>
+                      </div>
+                    </div>
+                    {userProducts.length === 0 && (
+                      <div className="flex items-start space-x-3 text-sm">
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full mt-2 flex-shrink-0" />
                         <div className="space-y-1">
-                          <p className="font-medium text-foreground">{activity.title}</p>
-                          {activity.product && (
-                            <p className="text-muted-foreground">{activity.product}</p>
-                          )}
-                          <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+                          <p className="font-medium text-foreground">Aguardando primeiro produto</p>
+                          <p className="text-muted-foreground">Entre em contato para adicionar produtos</p>
+                          <p className="text-xs text-muted-foreground">-</p>
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>

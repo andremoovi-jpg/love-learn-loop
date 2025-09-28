@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,58 +13,24 @@ import {
 import { ProductCard } from "@/components/ui/product-card";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data - replace with real Supabase queries
-const mockProducts = [
-  {
-    id: "1",
-    name: "Curso Completo de Marketing Digital",
-    slug: "marketing-digital-completo",
-    description: "Aprenda as estratégias mais avançadas de marketing digital e transforme seu negócio com técnicas comprovadas pelos maiores especialistas.",
-    cover_image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=225&fit=crop",
-    product_type: "course",
-    total_modules: 12,
-    estimated_duration: "8 horas",
-    level: "Intermediário",
-    progress: 65,
-  },
-  {
-    id: "2", 
-    name: "E-book: Vendas que Convertem",
-    slug: "ebook-vendas-convertem",
-    description: "Guia completo com técnicas comprovadas para aumentar suas conversões e transformar visitantes em clientes fiéis.",
-    cover_image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=225&fit=crop",
-    product_type: "ebook",
-    total_modules: 8,
-    estimated_duration: "2 horas",
-    level: "Iniciante",
-    progress: 100,
-  },
-  {
-    id: "3",
-    name: "Mentoria Individual: Estratégia de Negócios",
-    slug: "mentoria-estrategia-negocios",
-    description: "Sessões individuais de mentoria para desenvolver e implementar estratégias eficazes para seu negócio.",
-    cover_image_url: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=225&fit=crop",
-    product_type: "mentoring",
-    total_modules: 4,
-    estimated_duration: "4 sessões",
-    level: "Avançado",
-    progress: 25,
-  },
-  {
-    id: "4",
-    name: "Curso de Copywriting Persuasivo",
-    slug: "copywriting-persuasivo",
-    description: "Domine a arte da escrita persuasiva e crie textos que vendem automaticamente.",
-    cover_image_url: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=225&fit=crop",
-    product_type: "course",
-    total_modules: 15,
-    estimated_duration: "10 horas",
-    level: "Intermediário",
-    progress: 0,
-  },
-];
+interface UserProduct {
+  id: string;
+  progress: number;
+  purchased_at: string;
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    cover_image_url: string;
+    product_type: string;
+    estimated_duration: string;
+    level: string;
+  };
+}
 
 const filterOptions = [
   { value: "all", label: "Todos os produtos" },
@@ -81,29 +47,59 @@ const statusOptions = [
 ];
 
 export default function MeusProdutos() {
+  const { user } = useAuth();
+  const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredProducts = mockProducts.filter((product) => {
+  useEffect(() => {
+    if (user) {
+      fetchUserProducts();
+    }
+  }, [user]);
+
+  const fetchUserProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_products')
+        .select(`
+          *,
+          product:products(*)
+        `)
+        .eq('user_id', user!.id)
+        .order('purchased_at', { ascending: false });
+
+      if (error) throw error;
+      setUserProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching user products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredProducts = userProducts.filter((userProduct) => {
+    const product = userProduct.product;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = typeFilter === "all" || product.product_type === typeFilter;
     
     const matchesStatus = statusFilter === "all" ||
-                         (statusFilter === "not-started" && product.progress === 0) ||
-                         (statusFilter === "in-progress" && product.progress > 0 && product.progress < 100) ||
-                         (statusFilter === "completed" && product.progress === 100);
+                         (statusFilter === "not-started" && userProduct.progress === 0) ||
+                         (statusFilter === "in-progress" && userProduct.progress > 0 && userProduct.progress < 100) ||
+                         (statusFilter === "completed" && userProduct.progress === 100);
     
     return matchesSearch && matchesType && matchesStatus;
   });
 
   const getProgressStats = () => {
-    const total = mockProducts.length;
-    const completed = mockProducts.filter(p => p.progress === 100).length;
-    const inProgress = mockProducts.filter(p => p.progress > 0 && p.progress < 100).length;
-    const notStarted = mockProducts.filter(p => p.progress === 0).length;
+    const total = userProducts.length;
+    const completed = userProducts.filter(p => p.progress === 100).length;
+    const inProgress = userProducts.filter(p => p.progress > 0 && p.progress < 100).length;
+    const notStarted = userProducts.filter(p => p.progress === 0).length;
 
     return { total, completed, inProgress, notStarted };
   };
@@ -257,12 +253,19 @@ export default function MeusProdutos() {
           )}
 
           {/* Products Grid */}
-          {filteredProducts.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground">Carregando produtos...</p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
+              {filteredProducts.map((userProduct) => (
                 <ProductCard
-                  key={product.id}
-                  product={product}
+                  key={userProduct.id}
+                  product={{
+                    ...userProduct.product,
+                    progress: userProduct.progress
+                  }}
                   showProgress
                 />
               ))}
@@ -270,18 +273,20 @@ export default function MeusProdutos() {
           ) : (
             <div className="text-center py-12">
               <p className="text-lg text-muted-foreground mb-4">
-                Nenhum produto encontrado
+                {userProducts.length === 0 ? "Nenhum produto adquirido ainda" : "Nenhum produto encontrado"}
               </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm("");
-                  setTypeFilter("all");
-                  setStatusFilter("all");
-                }}
-              >
-                Limpar filtros
-              </Button>
+              {userProducts.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setTypeFilter("all");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              )}
             </div>
           )}
         </main>

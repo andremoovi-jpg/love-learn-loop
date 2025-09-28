@@ -8,6 +8,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import MeusProdutos from "./pages/MeusProdutos";
+import Produto from "./pages/Produto";
+import Ofertas from "./pages/Ofertas";
+import Perfil from "./pages/Perfil";
+import Conquistas from "./pages/Conquistas";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +41,26 @@ const App = () => (
             <Route path="/meus-produtos" element={
               <ProtectedRoute>
                 <MeusProdutos />
+              </ProtectedRoute>
+            } />
+            <Route path="/produto/:slug" element={
+              <ProtectedRoute>
+                <Produto />
+              </ProtectedRoute>
+            } />
+            <Route path="/ofertas" element={
+              <ProtectedRoute>
+                <Ofertas />
+              </ProtectedRoute>
+            } />
+            <Route path="/perfil" element={
+              <ProtectedRoute>
+                <Perfil />
+              </ProtectedRoute>
+            } />
+            <Route path="/conquistas" element={
+              <ProtectedRoute>
+                <Conquistas />
               </ProtectedRoute>
             } />
             

@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          condition_type: string
+          condition_value: number | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points: number | null
+          updated_at: string
+        }
+        Insert: {
+          condition_type: string
+          condition_value?: number | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points?: number | null
+          updated_at?: string
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: number | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -67,6 +106,259 @@ export type Database = {
           whatsapp?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string | null
+          title: string
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          title: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          cartpanda_product_id: string | null
+          content: Json | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          estimated_duration: string | null
+          id: string
+          is_active: boolean | null
+          level: string | null
+          name: string
+          product_type: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          cartpanda_product_id?: string | null
+          content?: Json | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_duration?: string | null
+          id?: string
+          is_active?: boolean | null
+          level?: string | null
+          name: string
+          product_type: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          cartpanda_product_id?: string | null
+          content?: Json | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_duration?: string | null
+          id?: string
+          is_active?: boolean | null
+          level?: string | null
+          name?: string
+          product_type?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          total_points: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          total_points?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          total_points?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      upsells: {
+        Row: {
+          cartpanda_checkout_url: string | null
+          created_at: string
+          description: string | null
+          discount_percentage: number | null
+          id: string
+          is_active: boolean | null
+          parent_product_id: string
+          price: number
+          title: string
+          updated_at: string
+          upsell_product_id: string
+        }
+        Insert: {
+          cartpanda_checkout_url?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          parent_product_id: string
+          price: number
+          title: string
+          updated_at?: string
+          upsell_product_id: string
+        }
+        Update: {
+          cartpanda_checkout_url?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          parent_product_id?: string
+          price?: number
+          title?: string
+          updated_at?: string
+          upsell_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upsells_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upsells_upsell_product_id_fkey"
+            columns: ["upsell_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          created_at: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          created_at?: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          created_at?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_products: {
+        Row: {
+          cartpanda_order_id: string | null
+          completed_at: string | null
+          completed_lessons: string[] | null
+          created_at: string
+          id: string
+          last_accessed_at: string | null
+          product_id: string
+          progress: number | null
+          purchased_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cartpanda_order_id?: string | null
+          completed_at?: string | null
+          completed_lessons?: string[] | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string | null
+          product_id: string
+          progress?: number | null
+          purchased_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cartpanda_order_id?: string | null
+          completed_at?: string | null
+          completed_lessons?: string[] | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string | null
+          product_id?: string
+          progress?: number | null
+          purchased_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

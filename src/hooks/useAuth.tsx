@@ -1,87 +1,105 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface User {
-  id: string;
-  email: string;
-  full_name: string;
-  phone?: string;
-  avatar_url?: string;
-  is_admin: boolean;
-  total_points: number;
-  status: string;
-}
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data - replace with real Supabase integration
-const mockUser: User = {
-  id: "1",
-  email: "admin@memberlovs.com",
-  full_name: "João Silva",
-  avatar_url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-  is_admin: true,
-  total_points: 1250,
-  status: "active",
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Simulate checking for existing session
-    const checkSession = async () => {
-      try {
-        // Check localStorage for session
-        const savedUser = localStorage.getItem("memberlovs_user");
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-      } finally {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
         setLoading(false);
+        
+        if (event === 'SIGNED_IN' && session) {
+          navigate('/dashboard');
+        }
+        if (event === 'SIGNED_OUT') {
+          navigate('/login');
+        }
       }
-    };
+    );
 
-    checkSession();
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      // Mock login - replace with real Supabase auth
-      if (email && password) {
-        setUser(mockUser);
-        localStorage.setItem("memberlovs_user", JSON.stringify(mockUser));
-        navigate("/dashboard");
-      } else {
-        throw new Error("Credenciais inválidas");
-      }
-    } catch (error) {
-      throw error;
-    } finally {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName
+        }
+      }
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Verifique seu email para confirmar sua conta!');
+    }
+    
+    return { error };
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      toast.error('Credenciais inválidas');
+    }
+    
+    return { error };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Erro ao fazer logout');
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("memberlovs_user");
-    navigate("/login");
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      signUp, 
+      signIn, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
