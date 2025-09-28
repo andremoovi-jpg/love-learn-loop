@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { User } from "@/types";
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +12,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,12 +24,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const enrichUserWithProfile = async (supabaseUser: any): Promise<User> => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .single();
+
+      const { data: adminUser } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .single();
+
+      return {
+        ...supabaseUser,
+        full_name: profile?.full_name || supabaseUser.user_metadata?.full_name,
+        avatar_url: profile?.avatar_url,
+        phone: profile?.phone,
+        total_points: profile?.total_points || 0,
+        is_admin: !!adminUser
+      };
+    } catch (error) {
+      return {
+        ...supabaseUser,
+        full_name: supabaseUser.user_metadata?.full_name,
+        total_points: 0,
+        is_admin: false
+      };
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        if (session?.user) {
+          const enrichedUser = await enrichUserWithProfile(session.user);
+          setUser(enrichedUser);
+        } else {
+          setUser(null);
+        }
         setLoading(false);
         
         if (event === 'SIGNED_IN' && session) {
@@ -39,9 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        const enrichedUser = await enrichUserWithProfile(session.user);
+        setUser(enrichedUser);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -98,7 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading, 
       signUp, 
       signIn, 
-      signOut 
+      signOut,
+      login: signIn, // Alias for backward compatibility
+      logout: signOut // Alias for backward compatibility
     }}>
       {children}
     </AuthContext.Provider>

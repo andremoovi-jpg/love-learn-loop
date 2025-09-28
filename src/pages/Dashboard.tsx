@@ -178,14 +178,16 @@ export default function Dashboard() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {userProducts.slice(0, 2).map((userProduct) => (
-                    <ProductCard
-                      key={userProduct.id}
-                      product={{
-                        ...userProduct.product,
-                        progress: userProduct.progress
-                      }}
-                      showProgress
-                    />
+                  <ProductCard
+                    key={userProduct.id}
+                    product={{
+                      ...userProduct.product,
+                      total_modules: (userProduct.product as any)?.total_modules || 
+                        (userProduct.product as any)?.content?.modules?.length || 0,
+                      progress: userProduct.progress
+                    }}
+                    showProgress
+                  />
                   ))}
                   {userProducts.length === 0 && (
                     <p className="text-center text-muted-foreground py-8 col-span-2">

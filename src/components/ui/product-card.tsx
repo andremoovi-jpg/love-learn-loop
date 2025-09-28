@@ -5,19 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Clock, BookOpen, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-export interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  cover_image_url?: string;
-  product_type: string;
-  total_modules: number;
-  estimated_duration?: string;
-  level?: string;
-  progress?: number;
-}
+import { Product } from "@/types";
 
 interface ProductCardProps {
   product: Product;
@@ -98,7 +86,7 @@ export function ProductCard({ product, className, showProgress = false }: Produc
         <div className="flex items-center space-x-4 text-xs text-muted-foreground">
           <div className="flex items-center space-x-1">
             <BookOpen className="h-3 w-3" />
-            <span>{product.total_modules} módulos</span>
+            <span>{product.total_modules || 0} módulos</span>
           </div>
           
           {product.estimated_duration && (

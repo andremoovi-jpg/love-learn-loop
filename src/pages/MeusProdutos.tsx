@@ -264,6 +264,8 @@ export default function MeusProdutos() {
                   key={userProduct.id}
                   product={{
                     ...userProduct.product,
+                    total_modules: (userProduct.product as any)?.total_modules || 
+                      (userProduct.product as any)?.content?.modules?.length || 0,
                     progress: userProduct.progress
                   }}
                   showProgress
