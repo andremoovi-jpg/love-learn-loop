@@ -19,6 +19,7 @@ import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminProdutos from "./pages/admin/AdminProdutos";
 import AdminUpsells from "./pages/admin/AdminUpsells";
 import AdminRelatorios from "./pages/admin/AdminRelatorios";
+import AdminWebhooks from "./pages/admin/AdminWebhooks";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,11 @@ const App = () => (
             <Route path="/admin/relatorios" element={
               <ProtectedRoute requireAdmin>
                 <AdminRelatorios />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/webhooks" element={
+              <ProtectedRoute requireAdmin>
+                <AdminWebhooks />
               </ProtectedRoute>
             } />
             

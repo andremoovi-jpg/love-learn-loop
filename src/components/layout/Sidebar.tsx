@@ -13,7 +13,8 @@ import {
   UserCog,
   Package,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  Webhook
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,6 +36,7 @@ const adminNavigation = [
   { name: "Produtos", href: "/admin/produtos", icon: Package },
   { name: "Upsells", href: "/admin/upsells", icon: TrendingUp },
   { name: "Relatórios", href: "/admin/relatorios", icon: BarChart3 },
+  { name: "Webhooks", href: "/admin/webhooks", icon: Webhook },
 ];
 
 export function Sidebar() {

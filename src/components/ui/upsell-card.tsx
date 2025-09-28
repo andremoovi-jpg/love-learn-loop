@@ -2,6 +2,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Star } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { trackUpsellView, trackUpsellClick } from "@/lib/tracking";
+import { useEffect } from "react";
 
 interface UpsellCardProps {
   upsell: {
@@ -23,7 +26,21 @@ interface UpsellCardProps {
 }
 
 export function UpsellCard({ upsell }: UpsellCardProps) {
+  const { user } = useAuth();
+  
+  // Track upsell view when component mounts
+  useEffect(() => {
+    if (user?.id) {
+      trackUpsellView(user.id, upsell.id);
+    }
+  }, [user?.id, upsell.id]);
+
   const handleBuyUpsell = () => {
+    // Track upsell click
+    if (user?.id) {
+      trackUpsellClick(user.id, upsell.id);
+    }
+    
     if (upsell.cartpanda_checkout_url) {
       window.open(upsell.cartpanda_checkout_url, '_blank');
     }

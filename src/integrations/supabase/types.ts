@@ -360,6 +360,77 @@ export type Database = {
           },
         ]
       }
+      user_upsell_views: {
+        Row: {
+          clicked: boolean | null
+          clicked_at: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          upsell_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          clicked?: boolean | null
+          clicked_at?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          upsell_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          clicked?: boolean | null
+          clicked_at?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          upsell_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_upsell_views_upsell_id_fkey"
+            columns: ["upsell_id"]
+            isOneToOne: false
+            referencedRelation: "upsells"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

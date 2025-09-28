@@ -14,6 +14,7 @@ import { ProductCard } from "@/components/ui/product-card";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProducts } from "@/hooks/useUserProducts";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserProduct {
