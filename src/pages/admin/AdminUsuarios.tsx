@@ -44,27 +44,75 @@ export default function AdminUsuarios() {
 
   const loadUsers = async () => {
     try {
-      const { data: profiles, error } = await supabase
+      console.log('=== INICIANDO CARREGAMENTO DE USUÁRIOS ===');
+      console.log('User atual:', user?.email, 'Admin:', user?.is_admin);
+
+      // Primeiro, buscar profiles simples para ver se funciona
+      console.log('🔍 Buscando profiles...');
+      
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_products (id)
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('📊 Resultado profiles:', { 
+        count: profiles?.length, 
+        error: profilesError?.message,
+        profiles: profiles?.slice(0, 2) // Primeiros 2 para debug
+      });
 
-      // Mock email data - em produção viria do auth.users
-      const usersWithDetails = (profiles || []).map(profile => ({
+      if (profilesError) {
+        console.error('❌ ERRO ao buscar profiles:', profilesError);
+        throw profilesError;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        console.log('⚠️ Nenhum profile encontrado');
+        setUsers([]);
+        return;
+      }
+
+      // Agora buscar contagem de produtos por usuário
+      console.log('🔍 Buscando contagem de produtos...');
+      
+      const { data: userProducts, error: productsError } = await supabase
+        .from('user_products')
+        .select('user_id');
+
+      console.log('📊 Resultado user_products:', { 
+        count: userProducts?.length, 
+        error: productsError?.message 
+      });
+
+      // Criar mapa de contagem de produtos
+      const productsMap = new Map<string, number>();
+      if (userProducts) {
+        userProducts.forEach(item => {
+          const count = productsMap.get(item.user_id) || 0;
+          productsMap.set(item.user_id, count + 1);
+        });
+      }
+
+      // Combinar dados
+      const usersWithDetails = profiles.map(profile => ({
         ...profile,
-        email: `user${profile.user_id.slice(0, 8)}@example.com`,
-        total_products: profile.user_products?.length || 0,
+        email: `user-${profile.user_id.slice(0, 8)}@example.com`,
+        total_products: productsMap.get(profile.user_id) || 0,
         status: 'active' as const
       }));
 
+      console.log('✅ Usuários processados:', usersWithDetails.length);
       setUsers(usersWithDetails);
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-      toast.error('Erro ao carregar usuários');
+
+    } catch (error: any) {
+      console.error('=== ERRO CAPTURADO ===');
+      console.error('Message:', error.message);
+      console.error('Code:', error.code);
+      console.error('Details:', error.details);
+      console.error('Hint:', error.hint);
+      console.error('Full error:', error);
+      
+      toast.error(`Erro ao carregar usuários: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
