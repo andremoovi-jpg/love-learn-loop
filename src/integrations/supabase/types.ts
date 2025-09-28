@@ -531,6 +531,22 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_public_products: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cover_image_url: string
+          created_at: string
+          description: string
+          estimated_duration: string
+          id: string
+          is_active: boolean
+          level: string
+          name: string
+          product_type: string
+          slug: string
+          updated_at: string
+        }[]
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
