@@ -51,26 +51,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔍 Carregando perfil do usuário:', userId);
 
-      // Verificar se usuário é admin na tabela admin_users
-      const { data: adminData, error: adminError } = await supabase
-        .from('admin_users')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      const isAdmin = adminData?.role === 'admin';
-      console.log('👑 Status admin verificado:', { isAdmin, adminData });
-
-      // Buscar dados do perfil na tabela profiles
+      // Buscar profile completo (agora com is_admin)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      console.log('📋 Dados do perfil:', { profileData, profileError });
+      console.log('📋 Dados do perfil carregados:', { profileData, profileError });
 
-      // Update user state with profile data
+      if (profileError) {
+        console.error('❌ Erro ao buscar perfil:', profileError);
+        return;
+      }
+
+      // Update user state with profile data (is_admin já vem do profiles)
       setUser(currentUser => {
         if (currentUser && currentUser.id === userId) {
           const updatedUser = {
@@ -79,10 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             avatar_url: profileData?.avatar_url,
             phone: profileData?.phone,
             total_points: profileData?.total_points || 0,
-            is_admin: isAdmin
+            is_admin: profileData?.is_admin || false
           };
           
-          console.log('✅ Updated user with admin status:', isAdmin);
+          console.log('✅ Updated user with admin status:', updatedUser.is_admin);
           return updatedUser;
         }
         return currentUser;
