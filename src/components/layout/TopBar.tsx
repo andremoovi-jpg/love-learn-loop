@@ -13,6 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { NotificationBell } from "@/components/NotificationBell";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from 'react-i18next';
 
 interface TopBarProps {
   title?: string;
@@ -22,6 +24,7 @@ interface TopBarProps {
 export function TopBar({ title, breadcrumbs }: TopBarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 lg:pl-72 shadow-soft">
@@ -56,10 +59,13 @@ export function TopBar({ title, breadcrumbs }: TopBarProps) {
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar..."
+            placeholder={t('common.search')}
             className="pl-9 w-64 bg-muted/50 border-0 focus:bg-background focus:ring-1 focus:ring-ring"
           />
         </div>
+
+        {/* Language Selector */}
+        <LanguageSelector />
 
         {/* Notifications */}
         <NotificationBell />
@@ -88,11 +94,11 @@ export function TopBar({ title, breadcrumbs }: TopBarProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/perfil")}>
               <User className="mr-2 h-4 w-4" />
-              Perfil
+              {t('navigation.profile')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
-              Sair
+              {t('navigation.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

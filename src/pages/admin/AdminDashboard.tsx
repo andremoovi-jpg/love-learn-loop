@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Package, DollarSign, TrendingUp } from "lucide-react";
+import { Users, Package, DollarSign, TrendingUp, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 interface AdminStats {
   totalUsers: number;
@@ -27,6 +30,8 @@ interface Activity {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     activeProducts: 0,

@@ -12,8 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
-import { Webhook, Eye, RefreshCw, Filter } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Webhook, Eye, RefreshCw, Filter, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WebhookLog {
   id: string;
@@ -27,6 +28,8 @@ interface WebhookLog {
 
 const AdminWebhooks = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [selectedLog, setSelectedLog] = useState<WebhookLog | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -100,10 +103,20 @@ const AdminWebhooks = () => {
         <main className="flex-1 overflow-auto p-6">
           <div className="space-y-6">
             {/* Header */}
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/admin')}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </div>
+            
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <Webhook className="h-8 w-8 text-primary" />
-                <h1 className="text-4xl font-bold">Webhooks</h1>
+                <h1 className="text-4xl font-bold">{t('admin.webhooks')}</h1>
               </div>
               <Button onClick={() => refetch()} variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />

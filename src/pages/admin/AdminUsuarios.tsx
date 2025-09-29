@@ -37,8 +37,10 @@ import {
   Calendar,
   Package,
   Award,
-  Copy
+  Copy,
+  ArrowLeft
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -70,6 +72,7 @@ interface Product {
 export default function AdminUsuarios() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -313,13 +316,23 @@ export default function AdminUsuarios() {
 
         <main className="p-6">
           <div className="space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/admin')}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </div>
+            
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl font-bold text-foreground mb-2">Usuários</h1>
+                <h1 className="text-4xl font-bold text-foreground mb-2">{t('admin.manageUsers')}</h1>
                 <p className="text-muted-foreground">Gerencie todos os usuários da plataforma</p>
               </div>
               <Input
-                placeholder="Buscar usuários..."
+                placeholder={t('common.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="max-w-md"

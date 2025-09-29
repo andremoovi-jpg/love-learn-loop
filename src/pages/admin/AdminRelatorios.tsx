@@ -3,10 +3,15 @@ import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, DollarSign, Package, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, DollarSign, Package, Target, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { TopBar } from "@/components/layout/TopBar";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 interface Reports {
   totalRevenue: string;
@@ -30,6 +35,8 @@ interface Reports {
 
 export default function AdminRelatorios() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [reports, setReports] = useState<Reports>({
     totalRevenue: "0",
     upsellConversion: "0",
@@ -137,12 +144,30 @@ export default function AdminRelatorios() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Relatórios</h1>
-          <p className="text-muted-foreground">Análise de performance da plataforma</p>
-        </div>
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar breadcrumbs={[
+          { label: t('admin.dashboard'), href: '/admin' },
+          { label: t('admin.reports') }
+        ]} />
+        
+        <main className="flex-1 overflow-auto p-6">
+          <div className="space-y-8">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/admin')}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-4xl font-bold text-foreground mb-2">{t('admin.reports')}</h1>
+                <p className="text-muted-foreground">Análise de performance da plataforma</p>
+              </div>
+            </div>
 
         {/* Cards de métricas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -252,6 +277,8 @@ export default function AdminRelatorios() {
             </div>
           )}
         </Card>
+          </div>
+        </main>
       </div>
     </div>
   );

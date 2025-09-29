@@ -13,14 +13,20 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Plus, MoreVertical, Edit, Trash, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, MoreVertical, Edit, Trash, ToggleLeft, ToggleRight, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Upsell, Product } from "@/types";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { TopBar } from "@/components/layout/TopBar";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 export default function AdminUpsells() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [upsells, setUpsells] = useState<Upsell[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [upsellDialog, setUpsellDialog] = useState(false);
@@ -200,18 +206,36 @@ export default function AdminUpsells() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Upsells</h1>
-            <p className="text-muted-foreground">Gerencie as ofertas de upsell da plataforma</p>
-          </div>
-          <Button onClick={() => openDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Upsell
-          </Button>
-        </div>
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar breadcrumbs={[
+          { label: t('admin.dashboard'), href: '/admin' },
+          { label: t('admin.upsells') }
+        ]} />
+        
+        <main className="flex-1 overflow-auto p-6">
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/admin')}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex-1 flex justify-between items-center">
+                <div>
+                  <h1 className="text-4xl font-bold text-foreground mb-2">{t('admin.upsells')}</h1>
+                  <p className="text-muted-foreground">Gerencie as ofertas de upsell da plataforma</p>
+                </div>
+                <Button onClick={() => openDialog()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Upsell
+                </Button>
+              </div>
+            </div>
 
         <Card>
           <Table>
@@ -385,6 +409,8 @@ export default function AdminUpsells() {
           </form>
         </DialogContent>
       </Dialog>
+        </main>
+      </div>
     </div>
   );
 }

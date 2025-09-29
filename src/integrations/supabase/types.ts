@@ -402,6 +402,7 @@ export type Database = {
           is_admin: boolean | null
           is_suspended: boolean | null
           phone: string | null
+          preferred_language: string | null
           total_points: number | null
           updated_at: string
           user_id: string
@@ -414,6 +415,7 @@ export type Database = {
           is_admin?: boolean | null
           is_suspended?: boolean | null
           phone?: string | null
+          preferred_language?: string | null
           total_points?: number | null
           updated_at?: string
           user_id: string
@@ -426,6 +428,7 @@ export type Database = {
           is_admin?: boolean | null
           is_suspended?: boolean | null
           phone?: string | null
+          preferred_language?: string | null
           total_points?: number | null
           updated_at?: string
           user_id?: string
