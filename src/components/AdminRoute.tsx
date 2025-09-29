@@ -9,7 +9,7 @@ interface AdminRouteProps {
 export const AdminRoute = ({ children }: AdminRouteProps) => {
   const { user, loading } = useAuth()
 
-  // Loading state
+  // Show loading while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -18,16 +18,16 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
     )
   }
 
-  // Not authenticated
+  // User not authenticated
   if (!user) {
     return <Navigate to="/login" replace />
   }
 
-  // Not admin - use ONLY is_admin from useAuth, no additional queries
+  // Check admin using ONLY is_admin from useAuth - NO new database query here
   if (!user.is_admin) {
     return <Navigate to="/dashboard" replace />
   }
 
-  // Is admin, render content
+  // User is admin, render content
   return <>{children}</>
 }
