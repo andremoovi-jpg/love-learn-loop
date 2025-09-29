@@ -90,50 +90,61 @@ export default function AdminUsuarios() {
 
   const loadUsers = async () => {
     try {
-      console.log('🔍 Carregando usuários com função segura...');
+      if (import.meta.env.DEV) {
+        console.log('🔍 Carregando usuários com função segura...');
+      }
 
-      // Use the new secure function for admin profile access
+      // Use the new ultra-secure function with audit logging and rate limiting
       const { data: secureData, error: secureError } = await supabase
-        .rpc('get_profiles_admin_secure');
+        .rpc('get_users_with_email_secure');
 
-      if (!secureError && secureData) {
-        console.log('✅ Dados recebidos via função segura:', secureData);
+      if (secureError) {
+        throw new Error(secureError.message);
+      }
 
-        const formattedUsers = secureData.map((user: any) => ({
-          ...user,
-          email: `user-${user.user_id.slice(0, 8)}@example.com`, // Fallback if no email
-          total_products: 0, // Will be fetched separately
-          status: user.is_suspended ? 'suspended' as const : 'active' as const
-        }));
-
-        // Load product counts for each user
-        const usersWithProducts = await Promise.all(
-          formattedUsers.map(async (user) => {
-            const { count } = await supabase
-              .from('user_products')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', user.user_id);
-
-            return {
-              ...user,
-              total_products: count || 0
-            };
-          })
-        );
-
-        setUsers(usersWithProducts);
-        console.log('✅ Usuários carregados com segurança:', usersWithProducts.length);
+      if (!secureData || secureData.length === 0) {
+        setUsers([]);
+        if (import.meta.env.DEV) {
+          console.log('⚠️ Nenhum usuário encontrado');
+        }
         return;
       }
 
-      // Fallback: If secure function fails, show error
-      throw new Error(secureError?.message || 'Falha ao acessar dados de usuários com segurança');
+      // Data already comes with masked emails, phones, and product counts
+      const formattedUsers = secureData.map((user: any) => ({
+        id: user.id,
+        user_id: user.user_id,
+        full_name: user.full_name,
+        avatar_url: user.avatar_url,
+        phone: user.phone, // Already masked by the function
+        total_points: user.total_points,
+        email: user.email, // Already masked by the function
+        total_products: user.total_products, // Already calculated by the function
+        is_suspended: user.is_suspended,
+        status: user.is_suspended ? 'suspended' as const : 'active' as const,
+        created_at: user.created_at
+      }));
+
+      setUsers(formattedUsers);
+      
+      if (import.meta.env.DEV) {
+        console.log('✅ Usuários carregados com segurança:', formattedUsers.length);
+      }
 
     } catch (error: any) {
-      console.error('❌ Erro ao carregar usuários:', error);
-      toast.error(`Erro: ${error.message || 'Erro de acesso ou permissões insuficientes'}`);
+      if (import.meta.env.DEV) {
+        console.error('❌ Erro ao carregar usuários:', error);
+      }
+      
+      // Show user-friendly error messages
+      if (error.message.includes('Rate limit')) {
+        toast.error('Muitas requisições. Aguarde um momento e tente novamente.');
+      } else if (error.message.includes('Acesso negado')) {
+        toast.error('Acesso negado. Verifique suas permissões de administrador.');
+      } else {
+        toast.error('Erro ao carregar usuários. Tente novamente mais tarde.');
+      }
 
-      // No fallback to direct table access for security reasons
       setUsers([]);
     } finally {
       setLoading(false);

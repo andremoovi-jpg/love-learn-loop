@@ -53,6 +53,27 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_rate_limits: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -107,6 +128,36 @@ export type Database = {
           request_count?: number | null
           user_id?: string | null
           window_start?: string | null
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          table_name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -670,6 +721,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_security_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -797,9 +852,21 @@ export type Database = {
           id: string
         }[]
       }
-      get_users_with_email: {
+      get_users_with_email_secure: {
         Args: Record<PropertyKey, never>
-        Returns: Json
+        Returns: {
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_admin: boolean
+          is_suspended: boolean
+          phone: string
+          total_points: number
+          total_products: number
+          user_id: string
+        }[]
       }
       increment_likes: {
         Args: { post_id: string }

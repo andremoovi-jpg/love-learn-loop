@@ -26,7 +26,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   const enrichUserWithProfile = async (supabaseUser: any): Promise<User> => {
-    console.log('🔍 Simplifying user profile for:', supabaseUser.id);
+    if (import.meta.env.DEV) {
+      console.log('🔍 Simplifying user profile for user ID');
+    }
     
     // Simplified approach - no complex queries that can hang
     const enrichedUser = {
@@ -36,7 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       is_admin: false
     };
 
-    console.log('✅ Simplified user ready:', enrichedUser.email);
+    if (import.meta.env.DEV) {
+      console.log('✅ Simplified user ready');
+    }
     
     // Load profile data asynchronously after auth is complete
     setTimeout(() => {
@@ -77,7 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             is_admin: profileData?.is_admin || false
           };
           
-          console.log('✅ Updated user with admin status:', updatedUser.is_admin);
+          if (import.meta.env.DEV) {
+            console.log('✅ Updated user with admin status:', updatedUser.is_admin);
+          }
           return updatedUser;
         }
         return currentUser;
@@ -191,7 +197,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔐 SignIn iniciado para:', email);
+    if (import.meta.env.DEV) {
+      console.log('🔐 SignIn iniciado');
+    }
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -199,15 +207,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password
       });
 
-      console.log('🔐 Resposta do Supabase:', { data: !!data, error });
+      if (import.meta.env.DEV) {
+        console.log('🔐 Resposta do Supabase:', { data: !!data, error: !!error });
+      }
 
       if (error) {
-        console.error('❌ Erro de login:', error);
+        if (import.meta.env.DEV) {
+          console.error('❌ Erro de login:', error);
+        }
         toast.error('Credenciais inválidas');
         throw error;
       }
 
-      console.log('✅ Login bem-sucedido, usuário:', data.user?.email);
+      if (import.meta.env.DEV) {
+        console.log('✅ Login bem-sucedido');
+      }
       return { error: null };
     } catch (error) {
       console.error('❌ Erro no catch do signIn:', error);

@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { validatePassword, sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
+import { sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
+import { validatePasswordSecurity } from "@/utils/passwordSecurity";
 
 export default function Cadastrar() {
   const [fullName, setFullName] = useState("");
@@ -27,7 +28,7 @@ export default function Cadastrar() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const validateForm = () => {
+  const validateForm = async () => {
     if (!fullName.trim()) {
       toast({
         title: "Erro",
@@ -64,11 +65,11 @@ export default function Cadastrar() {
       return false;
     }
 
-    // Validação de força da senha
-    const passwordValidation = validatePassword(password);
+    // Validação de força da senha e verificação de vazamentos
+    const passwordValidation = await validatePasswordSecurity(password);
     if (!passwordValidation.valid) {
       toast({
-        title: "Senha muito fraca",
+        title: "Senha insegura",
         description: passwordValidation.errors.join('. '),
         variant: "destructive",
       });
@@ -100,7 +101,8 @@ export default function Cadastrar() {
       return;
     }
     
-    if (!validateForm()) {
+    const isValid = await validateForm();
+    if (!isValid) {
       return;
     }
 
