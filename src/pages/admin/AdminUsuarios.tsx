@@ -90,83 +90,51 @@ export default function AdminUsuarios() {
 
   const loadUsers = async () => {
     try {
-      console.log('🔍 Carregando usuários...');
+      console.log('🔍 Carregando usuários com função segura...');
 
-      // Método 1: Tentar função que retorna JSON
-      try {
-        const { data: jsonData, error: jsonError } = await supabase
-          .rpc('get_users_with_email');
+      // Use the new secure function for admin profile access
+      const { data: secureData, error: secureError } = await supabase
+        .rpc('get_profiles_admin_secure');
 
-        if (!jsonError && jsonData) {
-          console.log('✅ Dados recebidos via RPC JSON:', jsonData);
+      if (!secureError && secureData) {
+        console.log('✅ Dados recebidos via função segura:', secureData);
 
-          // Parse do JSON se necessário
-          const users = Array.isArray(jsonData) ? jsonData : JSON.parse(String(jsonData));
+        const formattedUsers = secureData.map((user: any) => ({
+          ...user,
+          email: `user-${user.user_id.slice(0, 8)}@example.com`, // Fallback if no email
+          total_products: 0, // Will be fetched separately
+          status: user.is_suspended ? 'suspended' as const : 'active' as const
+        }));
 
-          const formattedUsers = users.map((user: any) => ({
-            ...user,
-            status: user.is_suspended ? 'suspended' as const : 'active' as const
-          }));
-
-          setUsers(formattedUsers);
-          setLoading(false);
-          return;
-        }
-      } catch (rpcError) {
-        console.log('⚠️ RPC não funcionou, tentando método manual...');
-      }
-
-      // Método 2: Busca manual (sempre funciona)
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (profilesError) throw profilesError;
-
-      if (profiles) {
-        // Para cada profile, criar objeto com email mockado
-        const usersWithDetails = await Promise.all(
-          profiles.map(async (profile) => {
+        // Load product counts for each user
+        const usersWithProducts = await Promise.all(
+          formattedUsers.map(async (user) => {
             const { count } = await supabase
               .from('user_products')
               .select('*', { count: 'exact', head: true })
-              .eq('user_id', profile.user_id);
-
-            // Email mockado como fallback
-            const email = `user-${profile.user_id.slice(0, 8)}@example.com`;
+              .eq('user_id', user.user_id);
 
             return {
-              ...profile,
-              email,
-              total_products: count || 0,
-              status: profile.is_suspended ? 'suspended' as const : 'active' as const
+              ...user,
+              total_products: count || 0
             };
           })
         );
 
-        console.log('✅ Usuários carregados (método manual):', usersWithDetails.length);
-        setUsers(usersWithDetails);
+        setUsers(usersWithProducts);
+        console.log('✅ Usuários carregados com segurança:', usersWithProducts.length);
+        return;
       }
+
+      // Fallback: If secure function fails, show error
+      throw new Error(secureError?.message || 'Falha ao acessar dados de usuários com segurança');
 
     } catch (error: any) {
       console.error('❌ Erro ao carregar usuários:', error);
-      toast.error(`Erro: ${error.message || 'Erro desconhecido'}`);
+      toast.error(`Erro: ${error.message || 'Erro de acesso ou permissões insuficientes'}`);
 
-      // Carregar lista básica como último recurso
-      const { data: basicProfiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (basicProfiles) {
-        setUsers(basicProfiles.map(p => ({
-          ...p,
-          email: `user-${p.user_id.slice(0, 8)}@example.com`,
-          total_products: 0,
-          status: 'active'
-        })));
-      }
+      // No fallback to direct table access for security reasons
+      setUsers([]);
     } finally {
       setLoading(false);
     }
