@@ -744,6 +744,22 @@ export type Database = {
           id: string
         }[]
       }
+      get_users_with_email: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_admin: boolean
+          is_suspended: boolean
+          phone: string
+          total_points: number
+          total_products: number
+          user_id: string
+        }[]
+      }
       increment_likes: {
         Args: { post_id: string }
         Returns: undefined

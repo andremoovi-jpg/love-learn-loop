@@ -54,7 +54,7 @@ interface UserProfile {
   phone?: string;
   total_points: number;
   created_at: string;
-  email?: string;
+  email: string; // Agora obrigatório pois sempre vem da função
   total_products: number;
   status: 'active' | 'suspended';
   is_suspended?: boolean;
@@ -90,48 +90,32 @@ export default function AdminUsuarios() {
 
   const loadUsers = async () => {
     try {
-      console.log('🔍 Carregando usuários...');
+      console.log('🔍 Carregando usuários com emails reais...');
 
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Usar a função segura para buscar usuários com email
+      const { data, error } = await supabase
+        .rpc('get_users_with_email');
 
-      if (profilesError) {
-        console.error('❌ ERRO ao buscar profiles:', profilesError);
-        throw profilesError;
+      if (error) {
+        console.error('❌ Erro ao buscar usuários:', error);
+        throw error;
       }
 
-      if (!profiles || profiles.length === 0) {
-        console.log('⚠️ Nenhum profile encontrado');
+      if (!data || data.length === 0) {
+        console.log('⚠️ Nenhum usuário encontrado');
         setUsers([]);
         return;
       }
 
-      // Buscar contagem de produtos
-      const { data: userProducts, error: productsError } = await supabase
-        .from('user_products')
-        .select('user_id');
-
-      // Criar mapa de contagem de produtos
-      const productsMap = new Map<string, number>();
-      if (userProducts) {
-        userProducts.forEach(item => {
-          const count = productsMap.get(item.user_id) || 0;
-          productsMap.set(item.user_id, count + 1);
-        });
-      }
-
-      // Combinar dados
-      const usersWithDetails: UserProfile[] = profiles.map(profile => ({
-        ...profile,
-        email: `user-${profile.user_id.slice(0, 8)}@example.com`,
-        total_products: productsMap.get(profile.user_id) || 0,
-        status: (profile.is_suspended ? 'suspended' : 'active') as 'active' | 'suspended'
+      // Processar dados da função RPC
+      const usersWithStatus = data.map(user => ({
+        ...user,
+        status: user.is_suspended ? 'suspended' as const : 'active' as const
       }));
 
-      console.log('✅ Usuários processados:', usersWithDetails.length);
-      setUsers(usersWithDetails);
+      console.log('✅ Usuários carregados com emails reais:', usersWithStatus.length);
+      console.log('📧 Exemplo:', usersWithStatus[0]?.email);
+      setUsers(usersWithStatus);
 
     } catch (error: any) {
       console.error('Erro ao carregar usuários:', error);
@@ -173,7 +157,8 @@ export default function AdminUsuarios() {
 
   const filteredUsers = users.filter(user =>
     user.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    user.email?.toLowerCase().includes(search.toLowerCase())
+    user.email?.toLowerCase().includes(search.toLowerCase()) ||
+    user.phone?.toLowerCase().includes(search.toLowerCase())
   );
 
   const viewUser = async (userProfile: UserProfile) => {
@@ -328,7 +313,7 @@ export default function AdminUsuarios() {
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {userProfile.email}
+                        {userProfile.email || 'Email não disponível'}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">
