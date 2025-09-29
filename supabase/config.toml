@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.cartpanda-webhook]
 verify_jwt = false
+
+[functions.get-user-emails-admin]
+verify_jwt = true

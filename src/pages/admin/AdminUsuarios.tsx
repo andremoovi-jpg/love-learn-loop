@@ -36,7 +36,8 @@ import {
   Phone,
   Calendar,
   Package,
-  Award
+  Award,
+  Copy
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,27 +91,59 @@ export default function AdminUsuarios() {
 
   const loadUsers = async () => {
     try {
-      console.log('🔍 Carregando lista de usuários...');
+      setLoading(true);
+      console.log('🔍 Carregando usuários com emails reais...');
 
-      // Usar a nova função RPC
-      const { data, error } = await supabase.rpc('get_admin_users_list');
+      // Método 1: Tentar Edge Function (emails reais)
+      try {
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+          'get-user-emails-admin',
+          {
+            body: {}
+          }
+        );
 
-      if (error) {
-        console.error('❌ Erro ao carregar usuários:', error.message);
+        if (!edgeError && edgeData && Array.isArray(edgeData)) {
+          console.log('✅ Emails reais carregados via Edge Function');
 
-        // Fallback: tentar carregar diretamente dos profiles
+          const formattedUsers = edgeData.map((user: any) => ({
+            ...user,
+            status: user.is_suspended ? 'suspended' as const : 'active' as const
+          }));
+
+          setUsers(formattedUsers);
+          toast.success(`${formattedUsers.length} usuários carregados`);
+          return;
+        }
+      } catch (edgeFunctionError) {
+        console.warn('⚠️ Edge Function não disponível, usando método alternativo');
+      }
+
+      // Método 2: Fallback para RPC existente
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_admin_users_list');
+
+      if (!rpcError && rpcData) {
+        const usersList = typeof rpcData === 'string' ? JSON.parse(rpcData) : rpcData;
+
+        const formattedUsers = usersList.map((user: any) => ({
+          ...user,
+          status: user.is_suspended ? 'suspended' as const : 'active' as const
+        }));
+
+        setUsers(formattedUsers);
+        toast.warning('Emails parcialmente mascarados por segurança');
+      } else {
+        // Método 3: Fallback direto para profiles
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(100);
 
-        if (profilesError) {
-          throw profilesError;
-        }
+        if (profilesError) throw profilesError;
 
         if (profiles) {
-        const usersWithDefaults = profiles.map(profile => ({
+          const usersWithDefaults = profiles.map(profile => ({
             ...profile,
             email: `user_${profile.id.substring(0, 8)}@private.com`,
             total_products: 0,
@@ -120,17 +153,6 @@ export default function AdminUsuarios() {
           setUsers(usersWithDefaults);
           toast.warning('Carregado com dados limitados');
         }
-      } else if (data) {
-        // Parse do JSON retornado
-        const usersList = typeof data === 'string' ? JSON.parse(data) : data;
-
-        const formattedUsers = usersList.map((user: any) => ({
-          ...user,
-          status: user.is_suspended ? 'suspended' as const : 'active' as const
-        }));
-
-        console.log(`✅ ${formattedUsers.length} usuários carregados`);
-        setUsers(formattedUsers);
       }
     } catch (error: any) {
       console.error('❌ Erro crítico:', error);
@@ -364,6 +386,19 @@ export default function AdminUsuarios() {
                             <DropdownMenuItem onClick={() => openAddProduct(userProfile)}>
                               <Plus className="h-4 w-4 mr-2" />
                               Adicionar Produto
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (userProfile.email && !userProfile.email.includes('***') && !userProfile.email.includes('private.com')) {
+                                  navigator.clipboard.writeText(userProfile.email);
+                                  toast.success('Email copiado!');
+                                } else {
+                                  toast.error('Email real não disponível');
+                                }
+                              }}
+                            >
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copiar Email
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleUserStatus(userProfile)}>
                               {userProfile.status === 'active' ? (
