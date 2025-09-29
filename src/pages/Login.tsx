@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { user, login } = useAuth();
   const { toast } = useToast();
+  
+  // Rate limiter para tentativas de login
+  const rateLimiter = new RateLimiter();
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -23,7 +27,15 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔄 Iniciando login para:', email);
+    // Verificar rate limiting
+    if (!rateLimiter.check('login', 5, 60000)) {
+      toast({
+        title: "Muitas tentativas",
+        description: "Muitas tentativas de login. Aguarde um minuto antes de tentar novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!email || !password) {
       toast({
@@ -34,36 +46,56 @@ export default function Login() {
       return;
     }
 
+    if (!isValidEmail(email)) {
+      toast({
+        title: "Erro",
+        description: "Por favor, digite um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
-      console.log('🔄 Chamando função login...');
-      const result = await login(email, password);
-      console.log('🔄 Resultado do login:', result);
+      // Sanitizar input do email
+      const sanitizedEmail = sanitizeInput(email).toLowerCase();
+      
+      const result = await login(sanitizedEmail, password);
       
       if (result.error) {
-        console.error('❌ Erro retornado pelo login:', result.error);
-        toast({
-          title: "Erro",
-          description: "Credenciais inválidas. Tente novamente.",
-          variant: "destructive",
-        });
+        if (result.error.message?.includes('Invalid login credentials')) {
+          toast({
+            title: "Erro",
+            description: "Email ou senha incorretos. Verifique suas credenciais.",
+            variant: "destructive",
+          });
+        } else if (result.error.message?.includes('Email not confirmed')) {
+          toast({
+            title: "Email não confirmado",
+            description: "Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro",
+            description: result.error.message || "Credenciais inválidas. Tente novamente.",
+            variant: "destructive",
+          });
+        }
       } else {
-        console.log('✅ Login bem-sucedido!');
         toast({
           title: "Sucesso",
           description: "Login realizado com sucesso!",
         });
       }
-    } catch (error) {
-      console.error('❌ Erro no catch do handleSubmit:', error);
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Credenciais inválidas. Tente novamente.",
+        description: "Erro inesperado ao fazer login. Tente novamente.",
         variant: "destructive",
       });
     } finally {
-      console.log('🔄 Resetando loading...');
       setLoading(false);
     }
   };

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { validatePassword, sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
 
 export default function Cadastrar() {
   const [fullName, setFullName] = useState("");
@@ -17,6 +18,9 @@ export default function Cadastrar() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user, signUp } = useAuth();
+  
+  // Rate limiter para tentativas de cadastro
+  const rateLimiter = new RateLimiter();
   const { toast } = useToast();
 
   if (user) {
@@ -42,7 +46,7 @@ export default function Cadastrar() {
       return false;
     }
 
-    if (!email.includes("@")) {
+    if (!isValidEmail(email)) {
       toast({
         title: "Erro",
         description: "Por favor, digite um email válido.",
@@ -51,10 +55,21 @@ export default function Cadastrar() {
       return false;
     }
 
-    if (password.length < 6) {
+    if (!password) {
       toast({
         title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        description: "Senha é obrigatória.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validação de força da senha
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      toast({
+        title: "Senha muito fraca",
+        description: passwordValidation.errors.join('. '),
         variant: "destructive",
       });
       return false;
@@ -75,6 +90,16 @@ export default function Cadastrar() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Verificar rate limiting
+    if (!rateLimiter.check('signup', 3, 60000)) {
+      toast({
+        title: "Muitas tentativas",
+        description: "Aguarde um minuto antes de tentar novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!validateForm()) {
       return;
     }
@@ -82,7 +107,11 @@ export default function Cadastrar() {
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password, fullName);
+      // Sanitizar inputs
+      const sanitizedName = sanitizeInput(fullName);
+      const sanitizedEmail = sanitizeInput(email).toLowerCase();
+      
+      const { error } = await signUp(sanitizedEmail, password, sanitizedName);
       
       if (error) {
         if (error.message.includes('already registered')) {
@@ -91,10 +120,10 @@ export default function Cadastrar() {
             description: "Este email já está cadastrado. Tente fazer login.",
             variant: "destructive",
           });
-        } else if (error.message.includes('Password should be at least')) {
+        } else if (error.message.includes('weak_password') || error.message.includes('Password should be at least')) {
           toast({
             title: "Erro",
-            description: "A senha deve ter pelo menos 6 caracteres.",
+            description: "Senha muito fraca. Use uma senha mais forte.",
             variant: "destructive",
           });
         } else {

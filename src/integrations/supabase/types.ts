@@ -80,6 +80,36 @@ export type Database = {
         }
         Relationships: []
       }
+      api_rate_limits: {
+        Row: {
+          created_at: string | null
+          endpoint: string | null
+          id: string
+          ip_address: unknown | null
+          request_count: number | null
+          user_id: string | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint?: string | null
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string | null
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           comments_count: number | null
@@ -377,6 +407,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "upsells_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "products_secure"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "upsells_upsell_product_id_fkey"
             columns: ["upsell_product_id"]
             isOneToOne: false
@@ -388,6 +425,13 @@ export type Database = {
             columns: ["upsell_product_id"]
             isOneToOne: false
             referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upsells_upsell_product_id_fkey"
+            columns: ["upsell_product_id"]
+            isOneToOne: false
+            referencedRelation: "products_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -477,6 +521,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -596,10 +647,96 @@ export type Database = {
         }
         Relationships: []
       }
+      products_secure: {
+        Row: {
+          content: Json | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          estimated_duration: string | null
+          has_access: boolean | null
+          id: string | null
+          level: string | null
+          name: string | null
+          product_type: string | null
+          slug: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content?: never
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_duration?: string | null
+          has_access?: never
+          id?: string | null
+          level?: string | null
+          name?: string | null
+          product_type?: string | null
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: never
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_duration?: string | null
+          has_access?: never
+          id?: string | null
+          level?: string | null
+          name?: string | null
+          product_type?: string | null
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_admin: boolean | null
+          phone: string | null
+          total_points: number | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          phone?: never
+          total_points?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          phone?: never
+          total_points?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_access_product_content: {
         Args: { product_id: string }
+        Returns: boolean
+      }
+      check_rate_limit: {
+        Args: {
+          p_endpoint: string
+          p_max_requests?: number
+          p_window_minutes?: number
+        }
         Returns: boolean
       }
       create_admin_user: {
@@ -620,6 +757,10 @@ export type Database = {
           updated_at: string
           whatsapp: string
         }[]
+      }
+      get_product_content_secure: {
+        Args: { product_id: string }
+        Returns: Json
       }
       get_product_with_access_control: {
         Args: { product_slug: string }
@@ -655,6 +796,14 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_user_list_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+        }[]
+      }
       increment_likes: {
         Args: { post_id: string }
         Returns: undefined
@@ -663,9 +812,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      mask_phone: {
+        Args: { phone: string }
+        Returns: string
+      }
       user_has_purchased_product: {
         Args: { product_id: string }
         Returns: boolean
+      }
+      validate_password_strength: {
+        Args: { password: string }
+        Returns: Json
       }
     }
     Enums: {
