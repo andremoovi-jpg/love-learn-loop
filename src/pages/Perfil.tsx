@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { validatePasswordSecurity } from "@/utils/passwordSecurity";
 
 interface Profile {
   full_name: string;
@@ -98,8 +99,15 @@ export default function Perfil() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+    // Validação completa com verificação de vazamentos
+    const passwordValidation = await validatePasswordSecurity(newPassword);
+    if (!passwordValidation.valid) {
+      toast.error(passwordValidation.errors.join('. '));
+      return;
+    }
+
+    if (passwordValidation.leaked) {
+      toast.error('Esta senha foi exposta em vazamentos de dados. Por favor, escolha outra.');
       return;
     }
 
