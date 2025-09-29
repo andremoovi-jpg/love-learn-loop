@@ -56,20 +56,23 @@ export type Database = {
       admin_rate_limits: {
         Row: {
           action: string
-          created_at: string | null
+          attempted_at: string | null
           id: string
+          success: boolean | null
           user_id: string | null
         }
         Insert: {
           action: string
-          created_at?: string | null
+          attempted_at?: string | null
           id?: string
+          success?: boolean | null
           user_id?: string | null
         }
         Update: {
           action?: string
-          created_at?: string | null
+          attempted_at?: string | null
           id?: string
+          success?: boolean | null
           user_id?: string | null
         }
         Relationships: []
@@ -478,24 +481,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "upsells_parent_product_id_fkey"
-            columns: ["parent_product_id"]
-            isOneToOne: false
-            referencedRelation: "products_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "upsells_upsell_product_id_fkey"
             columns: ["upsell_product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "upsells_upsell_product_id_fkey"
-            columns: ["upsell_product_id"]
-            isOneToOne: false
-            referencedRelation: "products_public"
             referencedColumns: ["id"]
           },
         ]
@@ -580,13 +569,6 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_products_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_upsell_views: {
@@ -662,78 +644,7 @@ export type Database = {
       }
     }
     Views: {
-      products_public: {
-        Row: {
-          cover_image_url: string | null
-          created_at: string | null
-          description: string | null
-          estimated_duration: string | null
-          id: string | null
-          is_active: boolean | null
-          level: string | null
-          name: string | null
-          product_type: string | null
-          slug: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          cover_image_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          estimated_duration?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          level?: string | null
-          name?: string | null
-          product_type?: string | null
-          slug?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          cover_image_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          estimated_duration?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          level?: string | null
-          name?: string | null
-          product_type?: string | null
-          slug?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      public_profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string | null
-          is_admin: boolean | null
-          total_points: number | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          is_admin?: boolean | null
-          total_points?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          is_admin?: boolean | null
-          total_points?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       can_access_product: {
@@ -742,6 +653,14 @@ export type Database = {
       }
       can_access_product_content: {
         Args: { product_id: string }
+        Returns: boolean
+      }
+      check_admin_rate_limit: {
+        Args: {
+          action_name: string
+          max_attempts?: number
+          window_minutes?: number
+        }
         Returns: boolean
       }
       check_rate_limit: {
@@ -767,6 +686,22 @@ export type Database = {
       get_admin_users_list: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_admin_users_with_real_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_admin: boolean
+          is_suspended: boolean
+          phone: string
+          total_points: number
+          total_products: number
+          user_id: string
+        }[]
       }
       get_community_profiles: {
         Args: Record<PropertyKey, never>
