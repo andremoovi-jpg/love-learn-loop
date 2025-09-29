@@ -22,13 +22,14 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
     }
   }, [loading])
 
-  console.log('🔐 AdminRoute check:', {
-    loading,
-    checkComplete,
-    isAdmin: user?.is_admin,
-    userEmail: user?.email,
-    hasUser: !!user
-  })
+  if (import.meta.env.DEV) {
+    console.log('🔐 AdminRoute check:', {
+      loading,
+      checkComplete,
+      isAdmin: user?.is_admin,
+      hasUser: !!user
+    })
+  }
 
   // Aguardar loading E check completo
   if (loading || !checkComplete) {
@@ -44,14 +45,14 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
 
   // Se não tem usuário ou não é admin, redirecionar
   if (!user || !user.is_admin) {
-    console.log('❌ AdminRoute: Acesso negado:', {
-      hasUser: !!user,
-      isAdmin: user?.is_admin,
-      userEmail: user?.email
-    })
+    if (import.meta.env.DEV) {
+      console.log('❌ AdminRoute: Acesso negado')
+    }
     return <Navigate to="/dashboard" replace />
   }
 
-  console.log('✅ AdminRoute: Acesso permitido para:', user.email)
+  if (import.meta.env.DEV) {
+    console.log('✅ AdminRoute: Acesso permitido')
+  }
   return <>{children}</>
 }
