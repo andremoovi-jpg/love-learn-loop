@@ -692,39 +692,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles_public: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string | null
-          is_admin: boolean | null
-          phone: string | null
-          total_points: number | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          is_admin?: boolean | null
-          phone?: never
-          total_points?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          is_admin?: boolean | null
-          phone?: never
-          total_points?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       can_access_product_content: {
@@ -746,6 +713,15 @@ export type Database = {
       decrement_likes: {
         Args: { post_id: string }
         Returns: undefined
+      }
+      get_community_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          total_points: number
+        }[]
       }
       get_leads_with_password: {
         Args: { password_input: string }
@@ -794,6 +770,19 @@ export type Database = {
           product_type: string
           slug: string
           updated_at: string
+        }[]
+      }
+      get_public_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          created_at: string
+          full_name: string
+          id: string
+          is_admin: boolean
+          phone: string
+          total_points: number
+          user_id: string
         }[]
       }
       get_user_list_secure: {
