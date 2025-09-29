@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, Play, ArrowLeft, ArrowRight, Loader2, Lock, AlertCircle, BookOpen, Download, File, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import DOMPurify from 'dompurify';
 
 interface Product {
   id: string;
@@ -568,7 +569,12 @@ export default function Produto() {
                     
                     {currentLesson.type === 'text' && currentLesson.content && (
                       <div className="mt-6 prose prose-gray max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
+                        <div dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(currentLesson.content, {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre'],
+                            ALLOWED_ATTR: ['class']
+                          })
+                        }} />
                       </div>
                     )}
                   </div>

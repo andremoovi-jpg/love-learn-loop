@@ -3,7 +3,40 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cartpanda-signature',
+}
+
+// Webhook signature verification function
+async function verifyCartPandaSignature(body: string, signature: string, secret: string): Promise<boolean> {
+  if (!signature || !secret) {
+    console.log('Missing signature or secret for verification');
+    return false;
+  }
+
+  try {
+    // CartPanda typically uses HMAC-SHA256 for webhook signatures
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signature_buffer = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
+    const expectedSignature = Array.from(new Uint8Array(signature_buffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    // Remove 'sha256=' prefix if present
+    const receivedSignature = signature.replace('sha256=', '');
+    
+    return expectedSignature === receivedSignature;
+  } catch (error) {
+    console.error('Signature verification failed:', error);
+    return false;
+  }
 }
 
 serve(async (req) => {
@@ -16,10 +49,31 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
+  
+  const cartPandaSecret = Deno.env.get('CARTPANDA_WEBHOOK_SECRET');
 
   try {
     console.log('📦 CartPanda webhook received');
-    const payload = await req.json()
+    
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-cartpanda-signature') || req.headers.get('X-CartPanda-Signature');
+    
+    // Verify webhook signature if secret is configured
+    if (cartPandaSecret && signature) {
+      const isValidSignature = await verifyCartPandaSignature(rawBody, signature, cartPandaSecret);
+      if (!isValidSignature) {
+        console.error('❌ Invalid webhook signature');
+        return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      console.log('✅ Webhook signature verified successfully');
+    } else if (cartPandaSecret) {
+      console.warn('⚠️ CartPanda secret configured but no signature provided');
+    }
+    
+    const payload = JSON.parse(rawBody);
     console.log('🔍 Payload:', JSON.stringify(payload, null, 2));
 
     // Log webhook received
