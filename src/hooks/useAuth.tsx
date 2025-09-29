@@ -22,114 +22,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
   const navigate = useNavigate();
 
-  const enrichUserWithProfile = async (supabaseUser: any): Promise<User> => {
-    if (import.meta.env.DEV) {
-      console.log('🔍 Simplifying user profile for user ID');
-    }
-    
-    // Simplified approach - no complex queries that can hang
-    const enrichedUser = {
-      ...supabaseUser,
-      full_name: supabaseUser.user_metadata?.full_name || 'Usuário',
-      total_points: 0,
-      is_admin: false
-    };
 
-    if (import.meta.env.DEV) {
-      console.log('✅ Simplified user ready');
-    }
-    
-    // Load profile data asynchronously after auth is complete
-    setTimeout(() => {
-      loadUserProfile(supabaseUser.id);
-    }, 100);
-    
-    return enrichedUser;
-  };
-
-  const loadUserProfile = async (userId: string) => {
-    setProfileLoading(true);
+  const loadUserProfile = async (supabaseUser: any): Promise<User> => {
     try {
-      console.log('🔍 Carregando perfil do usuário:', userId);
-
-      // Buscar profile completo (agora com is_admin)
+      // Buscar profile completo (is_admin já vem sincronizado do trigger)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      console.log('📋 Dados do perfil carregados:', { profileData, profileError });
+        .eq('user_id', supabaseUser.id)
+        .single();
 
       if (profileError) {
-        console.error('❌ Erro ao buscar perfil:', profileError);
-        return;
+        console.error('Error loading profile:', profileError);
       }
 
-      // Update user state with profile data (is_admin já vem do profiles)
-      setUser(currentUser => {
-        if (currentUser && currentUser.id === userId) {
-          const updatedUser = {
-            ...currentUser,
-            full_name: profileData?.full_name || currentUser.user_metadata?.full_name || 'Usuário',
-            avatar_url: profileData?.avatar_url,
-            phone: profileData?.phone,
-            total_points: profileData?.total_points || 0,
-            is_admin: profileData?.is_admin || false
-          };
-          
-          if (import.meta.env.DEV) {
-            console.log('✅ Updated user with admin status');
-          }
-          return updatedUser;
-        }
-        return currentUser;
-      });
+      // Return enhanced user with profile data
+      return {
+        ...supabaseUser,
+        full_name: profileData?.full_name || supabaseUser.user_metadata?.full_name || 'Usuário',
+        avatar_url: profileData?.avatar_url,
+        phone: profileData?.phone,
+        total_points: profileData?.total_points || 0,
+        is_admin: profileData?.is_admin || false
+      };
     } catch (error) {
-      console.error('❌ Error loading profile (non-blocking):', error);
-    } finally {
-      setProfileLoading(false);
+      console.error('Error in loadUserProfile:', error);
+      // Return user with basic data on error
+      return {
+        ...supabaseUser,
+        full_name: supabaseUser.user_metadata?.full_name || 'Usuário',
+        total_points: 0,
+        is_admin: false
+      };
     }
   };
 
   useEffect(() => {
-    let profileLoaded = false;
-    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         
         if (session?.user) {
-          // Set user with basic data first
-          const basicUser = {
-            ...session.user,
-            full_name: session.user.user_metadata?.full_name || 'Usuário',
-            total_points: 0,
-            is_admin: false
-          };
-          
-          setUser(basicUser);
-          
-          // Load profile data only once
-          if (!profileLoaded) {
-            profileLoaded = true;
-            setTimeout(() => {
-              loadUserProfile(session.user.id);
-            }, 100);
-          }
+          // Load profile data SYNCHRONOUSLY (no setTimeout)
+          const userData = await loadUserProfile(session.user);
+          setUser(userData);
         } else {
           setUser(null);
-          profileLoaded = false;
         }
         
         setLoading(false);
         
         if (event === 'SIGNED_IN' && session) {
-          setTimeout(() => navigate('/dashboard'), 500);
+          navigate('/dashboard');
         }
         if (event === 'SIGNED_OUT') {
           navigate('/login');
@@ -138,33 +85,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       setSession(session);
       
       if (session?.user) {
-        const basicUser = {
-          ...session.user,
-          full_name: session.user.user_metadata?.full_name || 'Usuário',
-          total_points: 0,
-          is_admin: false
-        };
-        
-        setUser(basicUser);
-        
-        // Load profile data only once
-        if (!profileLoaded) {
-          profileLoaded = true;
-          setTimeout(() => {
-            loadUserProfile(session.user.id);
-          }, 100);
-        }
+        // Load profile data SYNCHRONOUSLY
+        const userData = await loadUserProfile(session.user);
+        setUser(userData);
       } else {
         setUser(null);
       }
       
       setLoading(false);
     }).catch((error) => {
-      console.error('❌ Error getting session:', error);
+      console.error('Error getting session:', error);
       setLoading(false);
     });
 
@@ -240,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       session, 
-      loading: loading || profileLoading, 
+      loading,
       signUp, 
       signIn, 
       signOut,
