@@ -68,6 +68,26 @@ export default function Perfil() {
     }
   };
 
+  const handleAvatarUpload = async (url: string) => {
+    try {
+      // Update local state
+      setProfile(prev => ({ ...prev, avatar_url: url }));
+
+      // Save immediately to database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: url })
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+
+      toast.success('Foto de perfil atualizada!');
+    } catch (error: any) {
+      console.error('Error saving avatar:', error);
+      toast.error('Erro ao salvar foto de perfil');
+    }
+  };
+
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -205,9 +225,7 @@ export default function Perfil() {
                               'image/*': ['.png', '.jpg', '.jpeg', '.gif']
                             }}
                             maxSize={5 * 1024 * 1024}
-                            onUploadComplete={(url) => {
-                              setProfile(prev => ({ ...prev, avatar_url: url }));
-                            }}
+                            onUploadComplete={handleAvatarUpload}
                             currentUrl={profile.avatar_url}
                             label={t('profilePage.avatarPlaceholder')}
                           />

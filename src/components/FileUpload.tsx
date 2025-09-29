@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, FileIcon, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,16 +35,25 @@ export function FileUpload({
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl || null);
   const [fileName, setFileName] = useState<string>('');
 
+  // Update preview when currentUrl changes
+  useEffect(() => {
+    if (currentUrl) {
+      setPreviewUrl(currentUrl);
+    }
+  }, [currentUrl]);
+
   const uploadFile = async (file: File) => {
     try {
       setUploading(true);
       setUploadProgress(0);
       setFileName(file.name);
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
       // Criar nome único para o arquivo
       const fileExt = file.name.split('.').pop();
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      const fileName = `${userId}/${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       // Simular progresso para melhor UX
       const progressInterval = setInterval(() => {
@@ -68,15 +77,18 @@ export function FileUpload({
         .from(bucket)
         .getPublicUrl(fileName);
 
+      console.log('✅ Upload completo, URL:', publicUrl);
+
       setUploadProgress(100);
       setPreviewUrl(publicUrl);
       onUploadComplete(publicUrl);
 
       toast.success('Upload realizado com sucesso!');
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('❌ Upload error:', error);
       toast.error(error.message || 'Erro ao fazer upload');
       setUploadProgress(0);
+      setPreviewUrl(null);
     } finally {
       setUploading(false);
     }

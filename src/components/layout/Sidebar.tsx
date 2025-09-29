@@ -45,10 +45,13 @@ export function Sidebar() {
     { name: t('admin.webhooks'), href: "/admin/webhooks", icon: Webhook },
   ];
 
+  // FORCE admin for specific email
+  const isAdmin = user?.is_admin || user?.email === 'mooviturmalina@gmail.com';
+  
   // Debug: Log user admin status
   console.log('🔍 Sidebar - User admin status:', {
     hasUser: !!user,
-    isAdmin: user?.is_admin,
+    isAdmin,
     email: user?.email
   });
 
@@ -105,7 +108,7 @@ export function Sidebar() {
           </NavLink>
         ))}
 
-        {user?.is_admin && (
+        {isAdmin && (
           <>
             <div className="pt-4 pb-2">
               <div className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">

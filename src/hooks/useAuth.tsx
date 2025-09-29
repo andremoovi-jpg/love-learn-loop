@@ -29,6 +29,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Load user profile synchronously - NO setTimeout
   const loadUserProfile = async (userId: string) => {
     try {
+      // Get auth user to check email
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      // FORCE admin for specific email
+      if (authUser?.email === 'mooviturmalina@gmail.com') {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url, phone, total_points, is_admin')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        return {
+          ...profileData,
+          is_admin: true // ALWAYS admin for this email
+        };
+      }
+
       // Fetch complete profile (including is_admin)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -41,7 +58,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      return profileData;
+      // Also check admin_users table
+      const { data: adminData } = await supabase
+        .from('admin_users')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      // is_admin is true if in profiles OR admin_users
+      return {
+        ...profileData,
+        is_admin: profileData?.is_admin === true || !!adminData
+      };
     } catch (error) {
       console.error('❌ Error in loadUserProfile:', error);
       return null;
