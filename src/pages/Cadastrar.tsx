@@ -10,8 +10,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
 import { validatePasswordSecurity } from "@/utils/passwordSecurity";
 import { sanitizeName, sanitizeEmail } from "@/utils/sanitize";
+import { useTranslation } from 'react-i18next';
 
 export default function Cadastrar() {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +21,7 @@ export default function Cadastrar() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user, signUp } = useAuth();
+  const { user, signUp} = useAuth();
   
   // Rate limiter para tentativas de cadastro
   const rateLimiter = new RateLimiter();
@@ -32,8 +34,8 @@ export default function Cadastrar() {
   const validateForm = async () => {
     if (!fullName.trim()) {
       toast({
-        title: "Erro",
-        description: "Por favor, preencha seu nome completo.",
+        title: t('common.error'),
+        description: t('register.errors.nameRequired'),
         variant: "destructive",
       });
       return false;
@@ -41,8 +43,8 @@ export default function Cadastrar() {
 
     if (!email.trim()) {
       toast({
-        title: "Erro",
-        description: "Por favor, preencha seu email.",
+        title: t('common.error'),
+        description: t('register.errors.emailRequired'),
         variant: "destructive",
       });
       return false;
@@ -50,8 +52,8 @@ export default function Cadastrar() {
 
     if (!isValidEmail(email)) {
       toast({
-        title: "Erro",
-        description: "Por favor, digite um email válido.",
+        title: t('common.error'),
+        description: t('register.errors.invalidEmail'),
         variant: "destructive",
       });
       return false;
@@ -59,8 +61,8 @@ export default function Cadastrar() {
 
     if (!password) {
       toast({
-        title: "Erro",
-        description: "Senha é obrigatória.",
+        title: t('common.error'),
+        description: t('register.errors.passwordRequired'),
         variant: "destructive",
       });
       return false;
@@ -70,7 +72,7 @@ export default function Cadastrar() {
     const passwordValidation = await validatePasswordSecurity(password);
     if (!passwordValidation.valid) {
       toast({
-        title: "Senha insegura",
+        title: t('register.errors.insecurePassword'),
         description: passwordValidation.errors.join('. '),
         variant: "destructive",
       });
@@ -79,8 +81,8 @@ export default function Cadastrar() {
 
     if (password !== confirmPassword) {
       toast({
-        title: "Erro",
-        description: "As senhas não coincidem.",
+        title: t('common.error'),
+        description: t('register.errors.passwordsDontMatch'),
         variant: "destructive",
       });
       return false;
@@ -95,8 +97,8 @@ export default function Cadastrar() {
     // Verificar rate limiting
     if (!rateLimiter.check('signup', 3, 60000)) {
       toast({
-        title: "Muitas tentativas",
-        description: "Aguarde um minuto antes de tentar novamente.",
+        title: t('register.errors.tooManyAttempts'),
+        description: t('register.errors.waitBeforeRetry'),
         variant: "destructive",
       });
       return;
@@ -119,27 +121,27 @@ export default function Cadastrar() {
       if (error) {
         if (error.message.includes('already registered')) {
           toast({
-            title: "Erro",
-            description: "Este email já está cadastrado. Tente fazer login.",
+            title: t('common.error'),
+            description: t('register.errors.emailAlreadyRegistered'),
             variant: "destructive",
           });
         } else if (error.message.includes('weak_password') || error.message.includes('Password should be at least')) {
           toast({
-            title: "Erro",
-            description: "Senha muito fraca. Use uma senha mais forte.",
+            title: t('common.error'),
+            description: t('register.errors.weakPassword'),
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Erro",
-            description: error.message || "Erro ao criar conta. Tente novamente.",
+            title: t('common.error'),
+            description: error.message,
             variant: "destructive",
           });
         }
       } else {
         toast({
-          title: "Conta criada com sucesso!",
-          description: "Verifique seu email para confirmar sua conta. Após confirmar, você poderá fazer login.",
+          title: t('register.success.accountCreated'),
+          description: t('register.success.verifyEmail'),
         });
         // Reset form
         setFullName("");
@@ -149,8 +151,8 @@ export default function Cadastrar() {
       }
     } catch (error: any) {
       toast({
-        title: "Erro",
-        description: "Erro inesperado ao criar conta. Tente novamente.",
+        title: t('common.error'),
+        description: t('register.errors.unexpectedError'),
         variant: "destructive",
       });
     } finally {
@@ -164,30 +166,30 @@ export default function Cadastrar() {
         {/* Logo */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold gradient-premium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            MemberLovs
+            {t('sidebar.appName')}
           </h1>
           <p className="text-muted-foreground">
-            Crie sua conta para acessar nossa área de membros
+            {t('register.subtitle')}
           </p>
         </div>
 
         {/* Signup Form */}
         <Card className="shadow-medium border-border/50">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold">Criar Conta</CardTitle>
+            <CardTitle className="text-2xl font-semibold">{t('register.title')}</CardTitle>
             <CardDescription>
-              Preencha os dados abaixo para criar sua conta
+              {t('register.subtitle')}
             </CardDescription>
           </CardHeader>
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Nome Completo</Label>
+                <Label htmlFor="fullName">{t('register.fullNameLabel')}</Label>
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="Seu nome completo"
+                  placeholder={t('register.fullNamePlaceholder')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   disabled={loading}
@@ -197,11 +199,11 @@ export default function Cadastrar() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('register.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder={t('register.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
@@ -211,12 +213,12 @@ export default function Cadastrar() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">{t('register.passwordLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={t('register.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
@@ -241,12 +243,12 @@ export default function Cadastrar() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                <Label htmlFor="confirmPassword">{t('register.confirmPasswordLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={t('register.confirmPasswordPlaceholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={loading}
@@ -278,22 +280,22 @@ export default function Cadastrar() {
                 {loading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                    <span>Criando conta...</span>
+                    <span>{t('register.creatingAccount')}</span>
                   </div>
                 ) : (
-                  "Criar Conta"
+                  t('register.createAccountButton')
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Já tem uma conta?{" "}
+                {t('register.alreadyHaveAccount')}{" "}
                 <Link
                   to="/login"
                   className="font-medium text-primary hover:text-primary/80 transition-base"
                 >
-                  Entre aqui
+                  {t('register.signIn')}
                 </Link>
               </p>
             </div>
@@ -302,9 +304,9 @@ export default function Cadastrar() {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          Precisa de ajuda?{" "}
+          {t('register.needHelp')}{" "}
           <Link to="/support" className="font-medium text-primary hover:text-primary/80 transition-base">
-            Entre em contato
+            {t('register.contact')}
           </Link>
         </p>
       </div>

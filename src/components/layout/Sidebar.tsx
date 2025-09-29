@@ -20,28 +20,30 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
-
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Meus Produtos", href: "/meus-produtos", icon: BookOpen },
-  { name: "Ofertas", href: "/ofertas", icon: Tag },
-  { name: "Comunidade", href: "/comunidade", icon: Users },
-  { name: "Conquistas", href: "/conquistas", icon: Trophy },
-  { name: "Perfil", href: "/perfil", icon: User },
-];
-
-const adminNavigation = [
-  { name: "Dashboard", href: "/admin", icon: Settings },
-  { name: "Usuários", href: "/admin/usuarios", icon: UserCog },
-  { name: "Produtos", href: "/admin/produtos", icon: Package },
-  { name: "Upsells", href: "/admin/upsells", icon: TrendingUp },
-  { name: "Relatórios", href: "/admin/relatorios", icon: BarChart3 },
-  { name: "Webhooks", href: "/admin/webhooks", icon: Webhook },
-];
+import { useTranslation } from 'react-i18next';
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  
+  const navigation = [
+    { name: t('navigation.dashboard'), href: "/dashboard", icon: Home },
+    { name: t('navigation.products'), href: "/meus-produtos", icon: BookOpen },
+    { name: t('navigation.offers'), href: "/ofertas", icon: Tag },
+    { name: t('navigation.community'), href: "/comunidade", icon: Users },
+    { name: t('navigation.achievements'), href: "/conquistas", icon: Trophy },
+    { name: t('navigation.profile'), href: "/perfil", icon: User },
+  ];
+
+  const adminNavigation = [
+    { name: t('admin.dashboard'), href: "/admin", icon: Settings },
+    { name: t('admin.users'), href: "/admin/usuarios", icon: UserCog },
+    { name: t('admin.products'), href: "/admin/produtos", icon: Package },
+    { name: t('admin.upsells'), href: "/admin/upsells", icon: TrendingUp },
+    { name: t('admin.reports'), href: "/admin/relatorios", icon: BarChart3 },
+    { name: t('admin.webhooks'), href: "/admin/webhooks", icon: Webhook },
+  ];
 
   // Debug: Log user admin status
   console.log('🔍 Sidebar - User admin status:', {
@@ -59,7 +61,7 @@ export function Sidebar() {
       {/* Header */}
       <div className="p-6 border-b border-sidebar-border">
         <h1 className="text-2xl font-bold gradient-premium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          MemberLovs
+          {t('sidebar.appName')}
         </h1>
       </div>
 
@@ -74,7 +76,7 @@ export function Sidebar() {
           </Avatar>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {user?.full_name || "Usuário"}
+              {user?.full_name || t('sidebar.user')}
             </p>
             <p className="text-xs text-sidebar-foreground/70 truncate">
               {user?.email || "user@example.com"}
@@ -107,7 +109,7 @@ export function Sidebar() {
           <>
             <div className="pt-4 pb-2">
               <div className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
-                Administração
+                {t('sidebar.administration')}
               </div>
             </div>
             {adminNavigation.map((item) => (
@@ -142,7 +144,7 @@ export function Sidebar() {
           className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
         >
           <LogOut className="mr-3 h-5 w-5" />
-          Sair
+          {t('sidebar.logout')}
         </Button>
       </div>
     </>

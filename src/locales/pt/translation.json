@@ -183,5 +183,211 @@
     "markAllAsRead": "Marcar todas como lidas",
     "noNotifications": "Sem notificações",
     "viewAll": "Ver Todas"
+  },
+
+  "login": {
+    "title": "Entrar na sua conta",
+    "subtitle": "Faça login para acessar sua área de membros",
+    "emailLabel": "Email",
+    "emailPlaceholder": "seu@email.com",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "••••••••",
+    "forgotPassword": "Esqueceu a senha?",
+    "loginButton": "Entrar",
+    "signingIn": "Entrando...",
+    "noAccount": "Não tem uma conta?",
+    "createAccount": "Criar conta",
+    "needHelp": "Precisa de ajuda?",
+    "contact": "Entre em contato",
+    "errors": {
+      "tooManyAttempts": "Muitas tentativas",
+      "tooManyAttemptsMessage": "Muitas tentativas de login. Aguarde um minuto antes de tentar novamente.",
+      "fillAllFields": "Por favor, preencha todos os campos.",
+      "invalidEmail": "Por favor, digite um email válido.",
+      "wrongCredentials": "Email ou senha incorretos. Verifique suas credenciais.",
+      "emailNotConfirmed": "Email não confirmado",
+      "emailNotConfirmedMessage": "Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.",
+      "unexpectedError": "Erro inesperado ao fazer login. Tente novamente."
+    },
+    "success": {
+      "loginSuccess": "Login realizado com sucesso!"
+    }
+  },
+
+  "register": {
+    "title": "Criar sua conta",
+    "subtitle": "Crie sua conta para acessar nossa área de membros",
+    "fullNameLabel": "Nome Completo",
+    "fullNamePlaceholder": "Seu nome completo",
+    "emailLabel": "Email",
+    "emailPlaceholder": "seu@email.com",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "••••••••",
+    "confirmPasswordLabel": "Confirmar Senha",
+    "confirmPasswordPlaceholder": "••••••••",
+    "createAccountButton": "Criar Conta",
+    "creatingAccount": "Criando conta...",
+    "alreadyHaveAccount": "Já tem uma conta?",
+    "signIn": "Entre aqui",
+    "needHelp": "Precisa de ajuda?",
+    "contact": "Entre em contato",
+    "errors": {
+      "tooManyAttempts": "Muitas tentativas",
+      "waitBeforeRetry": "Aguarde um minuto antes de tentar novamente.",
+      "nameRequired": "Por favor, preencha seu nome completo.",
+      "emailRequired": "Por favor, preencha seu email.",
+      "invalidEmail": "Por favor, digite um email válido.",
+      "passwordRequired": "Senha é obrigatória.",
+      "insecurePassword": "Senha insegura",
+      "weakPassword": "Senha muito fraca. Use uma senha mais forte.",
+      "passwordsDontMatch": "As senhas não coincidem.",
+      "emailAlreadyRegistered": "Este email já está cadastrado. Tente fazer login.",
+      "unexpectedError": "Erro inesperado ao criar conta. Tente novamente."
+    },
+    "success": {
+      "accountCreated": "Conta criada com sucesso!",
+      "verifyEmail": "Verifique seu email para confirmar sua conta. Após confirmar, você poderá fazer login."
+    }
+  },
+
+  "myProducts": {
+    "title": "Meus Produtos",
+    "subtitle": "Gerencie e acesse todos os seus produtos adquiridos",
+    "searchPlaceholder": "Buscar produtos...",
+    "filters": {
+      "all": "Todos os produtos",
+      "courses": "Cursos",
+      "ebooks": "E-books",
+      "mentoring": "Mentorias",
+      "allStatus": "Todos os status",
+      "notStarted": "Não iniciado",
+      "inProgress": "Em progresso",
+      "completed": "Concluído",
+      "activeFilters": "Filtros ativos:",
+      "clearFilters": "Limpar filtros"
+    },
+    "stats": {
+      "total": "Total",
+      "completed": "Concluídos",
+      "inProgress": "Em Progresso",
+      "notStarted": "Não Iniciados"
+    },
+    "loading": "Carregando produtos...",
+    "noProducts": "Nenhum produto adquirido ainda",
+    "noProductsFound": "Nenhum produto encontrado"
+  },
+
+  "productPage": {
+    "content": "Conteúdo",
+    "completed": "concluído",
+    "inPreparation": "Conteúdo em Preparação",
+    "inPreparationMessage": "O conteúdo deste produto está sendo preparado e estará disponível em breve.",
+    "restrictedAccess": "Acesso Restrito",
+    "noAccessMessage": "Você não tem acesso a este produto.",
+    "contactSupport": "Entre em contato com o suporte para adquirir",
+    "viewOffers": "Ver Ofertas Disponíveis",
+    "backToDashboard": "Voltar ao Dashboard",
+    "markCompleted": "Marcar como Concluída",
+    "lessonCompleted": "Aula marcada como concluída!",
+    "errorSavingProgress": "Erro ao salvar progresso",
+    "nextLesson": "Próxima Aula",
+    "previousLesson": "Aula Anterior",
+    "attachments": "Materiais de Apoio",
+    "download": "Download",
+    "relatedOffers": "Ofertas Relacionadas",
+    "loading": "Carregando...",
+    "error": "Erro ao carregar produto"
+  },
+
+  "profilePage": {
+    "title": "Perfil",
+    "subtitle": "Gerencie suas informações pessoais e configurações de segurança",
+    "personalInfo": "Informações Pessoais",
+    "security": "Segurança",
+    "avatarLabel": "URL da Foto",
+    "avatarPlaceholder": "https://exemplo.com/foto.jpg",
+    "fullNameLabel": "Nome Completo",
+    "fullNamePlaceholder": "Seu nome completo",
+    "emailLabel": "Email",
+    "phoneLabel": "Telefone",
+    "phonePlaceholder": "(11) 99999-9999",
+    "pointsLabel": "Pontos Totais",
+    "changePasswordTitle": "Alterar Senha",
+    "currentPassword": "Senha Atual",
+    "newPassword": "Nova Senha",
+    "confirmPassword": "Confirmar Nova Senha",
+    "saveChanges": "Salvar Alterações",
+    "saving": "Salvando...",
+    "changePasswordButton": "Alterar Senha",
+    "changing": "Alterando...",
+    "errors": {
+      "updateProfile": "Erro ao atualizar perfil",
+      "passwordsDontMatch": "As senhas não coincidem",
+      "passwordExposed": "Esta senha foi exposta em vazamentos de dados. Por favor, escolha outra.",
+      "changePasswordError": "Erro ao alterar senha"
+    },
+    "success": {
+      "profileUpdated": "Perfil atualizado com sucesso!",
+      "passwordChanged": "Senha alterada com sucesso!"
+    },
+    "loading": "Carregando..."
+  },
+
+  "community": {
+    "title": "Comunidade MemberLovs",
+    "subtitle": "Compartilhe experiências e conecte-se com outros membros",
+    "newPost": "Novo Post",
+    "createPost": "Criar Post",
+    "postPlaceholder": "O que você quer compartilhar?",
+    "publish": "Publicar",
+    "cancel": "Cancelar",
+    "beFirst": "Seja o primeiro a criar um post!",
+    "errors": {
+      "emptyPost": "Escreva algo para postar",
+      "createError": "Erro ao criar post",
+      "loadError": "Erro ao carregar comunidade",
+      "likeError": "Erro ao curtir post"
+    },
+    "success": {
+      "postCreated": "Post criado!"
+    }
+  },
+
+  "sidebar": {
+    "appName": "MemberLovs",
+    "user": "Usuário",
+    "administration": "Administração",
+    "logout": "Sair"
+  },
+
+  "adminProducts": {
+    "title": "Produtos",
+    "subtitle": "Gerencie todos os produtos da plataforma",
+    "createProduct": "Criar Produto",
+    "noProducts": "Nenhum produto cadastrado",
+    "accessDenied": "Acesso Negado",
+    "adminOnly": "Somente administradores podem acessar esta área.",
+    "moduleDuplicated": "Módulo duplicado com sucesso!",
+    "fillRequiredFields": "Preencha todos os campos obrigatórios",
+    "productUpdated": "Produto atualizado com sucesso!",
+    "productCreated": "Produto criado com sucesso!",
+    "saveError": "Erro ao salvar produto",
+    "productDeleted": "Produto excluído com sucesso!",
+    "deleteError": "Erro ao excluir produto",
+    "confirmDelete": "Tem certeza que deseja excluir este produto?",
+    "confirmDeleteModule": "Tem certeza que deseja excluir este módulo e todas as suas aulas?",
+    "confirmDeleteLesson": "Tem certeza que deseja excluir esta aula?"
+  },
+
+  "notFound": {
+    "title": "Oops! Página não encontrada",
+    "message": "A página que você está procurando não existe.",
+    "returnHome": "Voltar ao Início"
+  },
+
+  "index": {
+    "welcome": "Bem-vindo ao Seu App",
+    "subtitle": "Comece a construir seu projeto incrível aqui!",
+    "getStarted": "Começar"
   }
 }

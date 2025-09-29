@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
 import { sanitizeEmail } from "@/utils/sanitize";
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,8 +33,8 @@ export default function Login() {
     // Verificar rate limiting
     if (!rateLimiter.check('login', 5, 60000)) {
       toast({
-        title: "Muitas tentativas",
-        description: "Muitas tentativas de login. Aguarde um minuto antes de tentar novamente.",
+        title: t('login.errors.tooManyAttempts'),
+        description: t('login.errors.tooManyAttemptsMessage'),
         variant: "destructive",
       });
       return;
@@ -40,8 +42,8 @@ export default function Login() {
     
     if (!email || !password) {
       toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos.",
+        title: t('common.error'),
+        description: t('login.errors.fillAllFields'),
         variant: "destructive",
       });
       return;
@@ -49,8 +51,8 @@ export default function Login() {
 
     if (!isValidEmail(email)) {
       toast({
-        title: "Erro",
-        description: "Por favor, digite um email válido.",
+        title: t('common.error'),
+        description: t('login.errors.invalidEmail'),
         variant: "destructive",
       });
       return;
@@ -67,33 +69,33 @@ export default function Login() {
       if (result.error) {
         if (result.error.message?.includes('Invalid login credentials')) {
           toast({
-            title: "Erro",
-            description: "Email ou senha incorretos. Verifique suas credenciais.",
+            title: t('common.error'),
+            description: t('login.errors.wrongCredentials'),
             variant: "destructive",
           });
         } else if (result.error.message?.includes('Email not confirmed')) {
           toast({
-            title: "Email não confirmado",
-            description: "Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.",
+            title: t('login.errors.emailNotConfirmed'),
+            description: t('login.errors.emailNotConfirmedMessage'),
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Erro",
-            description: result.error.message || "Credenciais inválidas. Tente novamente.",
+            title: t('common.error'),
+            description: result.error.message,
             variant: "destructive",
           });
         }
       } else {
         toast({
-          title: "Sucesso",
-          description: "Login realizado com sucesso!",
+          title: t('common.success'),
+          description: t('login.success.loginSuccess'),
         });
       }
     } catch (error: any) {
       toast({
-        title: "Erro",
-        description: "Erro inesperado ao fazer login. Tente novamente.",
+        title: t('common.error'),
+        description: t('login.errors.unexpectedError'),
         variant: "destructive",
       });
     } finally {
@@ -107,30 +109,30 @@ export default function Login() {
         {/* Logo */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold gradient-premium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            MemberLovs
+            {t('sidebar.appName')}
           </h1>
           <p className="text-muted-foreground">
-            Faça login para acessar sua área de membros
+            {t('login.subtitle')}
           </p>
         </div>
 
         {/* Login Form */}
         <Card className="shadow-medium border-border/50">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold">Entrar</CardTitle>
+            <CardTitle className="text-2xl font-semibold">{t('auth.login')}</CardTitle>
             <CardDescription>
-              Digite seu email e senha para acessar sua conta
+              {t('login.subtitle')}
             </CardDescription>
           </CardHeader>
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('login.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder={t('login.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
@@ -140,12 +142,12 @@ export default function Login() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">{t('login.passwordLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={t('login.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
@@ -175,7 +177,7 @@ export default function Login() {
                     to="/forgot-password"
                     className="font-medium text-primary hover:text-primary/80 transition-base"
                   >
-                    Esqueceu a senha?
+                    {t('login.forgotPassword')}
                   </Link>
                 </div>
               </div>
@@ -188,22 +190,22 @@ export default function Login() {
                 {loading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                    <span>Entrando...</span>
+                    <span>{t('login.signingIn')}</span>
                   </div>
                 ) : (
-                  "Entrar"
+                  t('login.loginButton')
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Não tem uma conta?{" "}
+                {t('login.noAccount')}{" "}
                 <Link
                   to="/cadastrar"
                   className="font-medium text-primary hover:text-primary/80 transition-base"
                 >
-                  Criar conta
+                  {t('login.createAccount')}
                 </Link>
               </p>
             </div>
@@ -212,9 +214,9 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          Precisa de ajuda?{" "}
+          {t('login.needHelp')}{" "}
           <Link to="/support" className="font-medium text-primary hover:text-primary/80 transition-base">
-            Entre em contato
+            {t('login.contact')}
           </Link>
         </p>
       </div>
