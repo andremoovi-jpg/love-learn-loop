@@ -10,7 +10,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Play, ArrowLeft, ArrowRight, Loader2, Lock, AlertCircle, BookOpen } from "lucide-react";
+import { CheckCircle, Play, ArrowLeft, ArrowRight, Loader2, Lock, AlertCircle, BookOpen, Download, File, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
