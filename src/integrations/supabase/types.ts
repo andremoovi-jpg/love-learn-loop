@@ -407,13 +407,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "upsells_parent_product_id_fkey"
-            columns: ["parent_product_id"]
-            isOneToOne: false
-            referencedRelation: "products_secure"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "upsells_upsell_product_id_fkey"
             columns: ["upsell_product_id"]
             isOneToOne: false
@@ -425,13 +418,6 @@ export type Database = {
             columns: ["upsell_product_id"]
             isOneToOne: false
             referencedRelation: "products_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "upsells_upsell_product_id_fkey"
-            columns: ["upsell_product_id"]
-            isOneToOne: false
-            referencedRelation: "products_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -521,13 +507,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_products_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -647,51 +626,6 @@ export type Database = {
         }
         Relationships: []
       }
-      products_secure: {
-        Row: {
-          content: Json | null
-          cover_image_url: string | null
-          created_at: string | null
-          description: string | null
-          estimated_duration: string | null
-          has_access: boolean | null
-          id: string | null
-          level: string | null
-          name: string | null
-          product_type: string | null
-          slug: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          content?: never
-          cover_image_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          estimated_duration?: string | null
-          has_access?: never
-          id?: string | null
-          level?: string | null
-          name?: string | null
-          product_type?: string | null
-          slug?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          content?: never
-          cover_image_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          estimated_duration?: string | null
-          has_access?: never
-          id?: string | null
-          level?: string | null
-          name?: string | null
-          product_type?: string | null
-          slug?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       can_access_product_content: {
@@ -737,6 +671,23 @@ export type Database = {
       get_product_content_secure: {
         Args: { product_id: string }
         Returns: Json
+      }
+      get_product_secure: {
+        Args: { product_slug: string }
+        Returns: {
+          content: Json
+          cover_image_url: string
+          created_at: string
+          description: string
+          estimated_duration: string
+          has_access: boolean
+          id: string
+          level: string
+          name: string
+          product_type: string
+          slug: string
+          updated_at: string
+        }[]
       }
       get_product_with_access_control: {
         Args: { product_slug: string }
