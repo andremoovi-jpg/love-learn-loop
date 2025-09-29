@@ -584,6 +584,45 @@ export type Database = {
       }
     }
     Views: {
+      private_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_admin: boolean | null
+          is_suspended: boolean | null
+          phone: string | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          is_suspended?: boolean | null
+          phone?: string | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          is_suspended?: boolean | null
+          phone?: string | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       products_public: {
         Row: {
           cover_image_url: string | null
@@ -623,6 +662,36 @@ export type Database = {
           product_type?: string | null
           slug?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_admin: boolean | null
+          total_points: number | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          total_points?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          total_points?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -707,6 +776,20 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_profiles_admin_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          created_at: string
+          full_name: string
+          id: string
+          is_admin: boolean
+          is_suspended: boolean
+          phone: string
+          total_points: number
+          user_id: string
+        }[]
+      }
       get_public_products: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -734,6 +817,15 @@ export type Database = {
           phone: string
           total_points: number
           user_id: string
+        }[]
+      }
+      get_public_profiles_community: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          total_points: number
         }[]
       }
       get_user_list_secure: {
