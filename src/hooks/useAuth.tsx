@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           
           if (import.meta.env.DEV) {
-            console.log('✅ Updated user with admin status:', updatedUser.is_admin);
+            console.log('✅ Updated user with admin status');
           }
           return updatedUser;
         }

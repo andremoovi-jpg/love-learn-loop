@@ -880,6 +880,10 @@ export type Database = {
         Args: { phone: string }
         Returns: string
       }
+      schedule_security_cleanup: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       user_has_purchased_product: {
         Args: { product_id: string }
         Returns: boolean
@@ -887,6 +891,15 @@ export type Database = {
       validate_password_strength: {
         Args: { password: string }
         Returns: Json
+      }
+      verify_data_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          description: string
+          issue_count: number
+          issue_type: string
+          table_name: string
+        }[]
       }
     }
     Enums: {
