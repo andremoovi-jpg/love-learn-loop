@@ -830,6 +830,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_user_admin: {
+        Args: { check_user_id?: string }
+        Returns: boolean
+      }
       mask_phone: {
         Args: { phone: string }
         Returns: string
