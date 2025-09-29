@@ -626,6 +626,36 @@ export type Database = {
         }
         Relationships: []
       }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_admin: boolean | null
+          total_points: number | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          total_points?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_admin?: boolean | null
+          total_points?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_access_product_content: {
