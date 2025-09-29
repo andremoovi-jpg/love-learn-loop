@@ -50,19 +50,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Initialize auth synchronously
     const initAuth = async () => {
       try {
+        console.log('🚀 InitAuth: Starting...');
         setLoading(true);
 
         const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🚀 InitAuth: Session fetched', { hasSession: !!session, error });
 
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('❌ InitAuth: Error getting session:', error);
           setUser(null);
           setLoading(false);
           return;
         }
 
         if (session?.user) {
+          console.log('🚀 InitAuth: Loading profile for user:', session.user.id);
           // Load profile data synchronously - NO setTimeout
+          const profileData = await loadUserProfile(session.user.id);
+          console.log('🚀 InitAuth: Profile loaded', { profileData });
+
+          const enrichedUser: User = {
+            ...session.user,
+            full_name: profileData?.full_name || session.user.user_metadata?.full_name || 'Usuário',
+            avatar_url: profileData?.avatar_url,
+            phone: profileData?.phone,
+            total_points: profileData?.total_points || 0,
+            is_admin: profileData?.is_admin || false
+          };
+
+          console.log('✅ InitAuth: User set', { is_admin: enrichedUser.is_admin });
+          setUser(enrichedUser);
+          setSession(session);
+        } else {
+          console.log('🚀 InitAuth: No session, user set to null');
+          setUser(null);
+          setSession(null);
+        }
+      } catch (error) {
+        console.error('❌ InitAuth: Error in initAuth:', error);
+        setUser(null);
+      } finally {
+        console.log('✅ InitAuth: Complete, setting loading to false');
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Auth state change listener - CRITICAL: No async Supabase calls inside callback
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/login');
+      } else if (session?.user) {
+        // Set basic user first (synchronous)
+        const basicUser: User = {
+          ...session.user,
+          full_name: session.user.user_metadata?.full_name || 'Usuário',
+          avatar_url: undefined,
+          phone: undefined,
+          total_points: 0,
+          is_admin: false
+        };
+
+        setUser(basicUser);
+
+        // Defer Supabase calls with setTimeout to avoid deadlock
+        setTimeout(async () => {
           const profileData = await loadUserProfile(session.user.id);
 
           const enrichedUser: User = {
@@ -75,42 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
 
           setUser(enrichedUser);
-          setSession(session);
-        } else {
-          setUser(null);
-          setSession(null);
-        }
-      } catch (error) {
-        console.error('Error in initAuth:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-
-    // Auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        navigate('/login');
-      } else if (session?.user) {
-        // Load profile synchronously on auth change
-        const profileData = await loadUserProfile(session.user.id);
-
-        const enrichedUser: User = {
-          ...session.user,
-          full_name: profileData?.full_name || session.user.user_metadata?.full_name || 'Usuário',
-          avatar_url: profileData?.avatar_url,
-          phone: profileData?.phone,
-          total_points: profileData?.total_points || 0,
-          is_admin: profileData?.is_admin || false
-        };
-
-        setUser(enrichedUser);
+        }, 0);
 
         if (event === 'SIGNED_IN') {
           navigate('/dashboard');
