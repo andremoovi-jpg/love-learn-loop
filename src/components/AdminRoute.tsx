@@ -1,58 +1,66 @@
+import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/integrations/supabase/client'
 import { Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
 
 interface AdminRouteProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export const AdminRoute = ({ children }: AdminRouteProps) => {
-  const { user, loading } = useAuth()
-  const [checkComplete, setCheckComplete] = useState(false)
+  const { user, loading: authLoading } = useAuth()
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Aguardar um pouco para garantir que o perfil foi carregado
-    if (!loading) {
-      const timer = setTimeout(() => {
-        setCheckComplete(true)
-      }, 500)
+    const checkAdminStatus = async () => {
+      if (!user) {
+        setIsAdmin(false)
+        setLoading(false)
+        return
+      }
 
-      return () => clearTimeout(timer)
+      try {
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('role')
+          .eq('user_id', user.id)
+          .single()
+
+        if (error || !data) {
+          setIsAdmin(false)
+        } else {
+          setIsAdmin(true)
+        }
+      } catch (err) {
+        console.error('Error checking admin status:', err)
+        setIsAdmin(false)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [loading])
 
-  if (import.meta.env.DEV) {
-    console.log('🔐 AdminRoute check:', {
-      loading,
-      checkComplete,
-      isAdmin: user?.is_admin,
-      hasUser: !!user
-    })
-  }
+    if (!authLoading) {
+      checkAdminStatus()
+    }
+  }, [user, authLoading])
 
-  // Aguardar loading E check completo
-  if (loading || !checkComplete) {
+  if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Verificando permissões de administrador...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
-  // Se não tem usuário ou não é admin, redirecionar
-  if (!user || !user.is_admin) {
-    if (import.meta.env.DEV) {
-      console.log('❌ AdminRoute: Acesso negado')
-    }
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (!isAdmin) {
     return <Navigate to="/dashboard" replace />
   }
 
-  if (import.meta.env.DEV) {
-    console.log('✅ AdminRoute: Acesso permitido')
-  }
   return <>{children}</>
 }

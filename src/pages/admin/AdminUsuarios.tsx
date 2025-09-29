@@ -91,77 +91,81 @@ export default function AdminUsuarios() {
 
   const loadUsers = async () => {
     try {
-      setLoading(true);
-      console.log('🔍 Carregando usuários com emails reais...');
+      setLoading(true)
+      console.log('🔍 Carregando usuários com emails reais...')
 
-      // Método 1: Tentar Edge Function (emails reais)
-      try {
-        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
-          'get-user-emails-admin',
-          {
-            body: {}
+      // Método 1: Usar nova função segura get_admin_users_with_real_emails
+      const { data, error } = await supabase.rpc('get_admin_users_with_real_emails')
+
+      if (error) {
+        console.error('❌ Erro ao carregar via RPC segura:', error)
+
+        // Fallback: Tentar Edge Function
+        try {
+          const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+            'get-user-emails-admin',
+            { body: {} }
+          )
+
+          if (!edgeError && edgeData && Array.isArray(edgeData)) {
+            console.log('✅ Emails via Edge Function')
+            const formattedUsers = edgeData.map((user: any) => ({
+              ...user,
+              status: user.is_suspended ? 'suspended' as const : 'active' as const
+            }))
+            setUsers(formattedUsers)
+            toast.success(`${formattedUsers.length} usuários carregados`)
+            return
           }
-        );
-
-        if (!edgeError && edgeData && Array.isArray(edgeData)) {
-          console.log('✅ Emails reais carregados via Edge Function');
-
-          const formattedUsers = edgeData.map((user: any) => ({
-            ...user,
-            status: user.is_suspended ? 'suspended' as const : 'active' as const
-          }));
-
-          setUsers(formattedUsers);
-          toast.success(`${formattedUsers.length} usuários carregados`);
-          return;
+        } catch (e) {
+          console.log('Edge Function não disponível')
         }
-      } catch (edgeFunctionError) {
-        console.warn('⚠️ Edge Function não disponível, usando método alternativo');
-      }
 
-      // Método 2: Fallback para RPC existente
-      const { data: rpcData, error: rpcError } = await supabase.rpc('get_admin_users_list');
-
-      if (!rpcError && rpcData) {
-        const usersList = typeof rpcData === 'string' ? JSON.parse(rpcData) : rpcData;
-
-        const formattedUsers = usersList.map((user: any) => ({
-          ...user,
-          status: user.is_suspended ? 'suspended' as const : 'active' as const
-        }));
-
-        setUsers(formattedUsers);
-        toast.warning('Emails parcialmente mascarados por segurança');
-      } else {
-        // Método 3: Fallback direto para profiles
-        const { data: profiles, error: profilesError } = await supabase
+        // Último fallback: profiles sem emails
+        const { data: profiles } = await supabase
           .from('profiles')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (profilesError) throw profilesError;
+          .limit(100)
 
         if (profiles) {
-          const usersWithDefaults = profiles.map(profile => ({
-            ...profile,
-            email: `user_${profile.id.substring(0, 8)}@private.com`,
+          const fallbackUsers = profiles.map(p => ({
+            ...p,
+            email: 'email-protegido@sistema.com',
             total_products: 0,
-            status: profile.is_suspended ? 'suspended' as const : 'active' as const
-          }));
+            status: p.is_suspended ? 'suspended' as const : 'active' as const
+          }))
+          setUsers(fallbackUsers)
+          toast.warning('Emails não disponíveis - verifique permissões')
+        }
+      } else if (data && Array.isArray(data)) {
+        // Sucesso - emails reais carregados via RPC segura
+        const formattedUsers = data.map((user: any) => ({
+          ...user,
+          status: user.is_suspended ? 'suspended' as const : 'active' as const
+        }))
 
-          setUsers(usersWithDefaults);
-          toast.warning('Carregado com dados limitados');
+        console.log(`✅ ${formattedUsers.length} usuários com emails reais`)
+        setUsers(formattedUsers)
+
+        const hasRealEmails = formattedUsers.some(u =>
+          u.email && !u.email.includes('sistema.com') && !u.email.includes('private.com')
+        )
+
+        if (hasRealEmails) {
+          toast.success(`${formattedUsers.length} usuários com emails reais`)
+        } else {
+          toast.warning('Alguns emails podem não estar disponíveis')
         }
       }
     } catch (error: any) {
-      console.error('❌ Erro crítico:', error);
-      toast.error('Erro ao carregar usuários. Verifique as permissões.');
-      setUsers([]);
+      console.error('❌ Erro crítico:', error)
+      toast.error('Erro ao carregar usuários')
+      setUsers([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const loadProducts = async () => {
     try {
