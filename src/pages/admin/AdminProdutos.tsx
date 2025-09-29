@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FileUpload } from "@/components/FileUpload";
 import {
   Dialog,
   DialogContent,
@@ -650,19 +651,19 @@ export default function AdminProdutos() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">URL da Imagem de Capa</label>
-                  <Input
-                    value={formData.cover_image_url}
-                    onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })}
-                    placeholder="https://exemplo.com/imagem.jpg"
+                  <label className="text-sm font-medium">Imagem de Capa</label>
+                  <FileUpload
+                    bucket="products"
+                    accept={{
+                      'image/*': ['.png', '.jpg', '.jpeg', '.webp']
+                    }}
+                    maxSize={10 * 1024 * 1024}
+                    onUploadComplete={(url) => {
+                      setFormData(prev => ({ ...prev, cover_image_url: url }));
+                    }}
+                    currentUrl={formData.cover_image_url}
+                    label="Arraste a imagem do produto ou clique para selecionar"
                   />
-                  {formData.cover_image_url && (
-                    <img
-                      src={formData.cover_image_url}
-                      alt="Preview"
-                      className="mt-2 h-32 object-cover rounded"
-                    />
-                  )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">

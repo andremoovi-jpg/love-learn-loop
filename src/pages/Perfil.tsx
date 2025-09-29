@@ -13,6 +13,7 @@ import { User, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { validatePasswordSecurity } from "@/utils/passwordSecurity";
 import { useTranslation } from 'react-i18next';
+import { FileUpload } from "@/components/FileUpload";
 
 interface Profile {
   full_name: string;
@@ -196,15 +197,23 @@ export default function Perfil() {
                             {profile.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="space-y-2">
-                          <Label htmlFor="avatar_url">{t('profilePage.avatarLabel')}</Label>
-                          <Input
-                            id="avatar_url"
-                            type="url"
-                            placeholder={t('profilePage.avatarPlaceholder')}
-                            value={profile.avatar_url}
-                            onChange={(e) => setProfile({...profile, avatar_url: e.target.value})}
+                        <div className="flex-1 space-y-2">
+                          <Label htmlFor="avatar">{t('profilePage.avatarLabel')}</Label>
+                          <FileUpload
+                            bucket="avatars"
+                            accept={{
+                              'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+                            }}
+                            maxSize={5 * 1024 * 1024}
+                            onUploadComplete={(url) => {
+                              setProfile(prev => ({ ...prev, avatar_url: url }));
+                            }}
+                            currentUrl={profile.avatar_url}
+                            label={t('profilePage.avatarPlaceholder')}
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Formatos aceitos: PNG, JPG, GIF. Máximo 5MB.
+                          </p>
                         </div>
                       </div>
 

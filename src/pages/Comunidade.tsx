@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTranslation } from 'react-i18next';
+import { FileUpload } from "@/components/FileUpload";
 
 interface Post {
   id: string;
@@ -34,6 +35,7 @@ export default function Comunidade() {
   const { t } = useTranslation();
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
+  const [postImage, setPostImage] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -115,6 +117,7 @@ export default function Comunidade() {
         .insert({
           user_id: user!.id,
           content: newPost,
+          image_url: postImage,
           likes_count: 0,
           comments_count: 0
         });
@@ -123,6 +126,7 @@ export default function Comunidade() {
 
       toast.success(t('community.success.postCreated'));
       setNewPost("");
+      setPostImage('');
       setDialogOpen(false);
       loadPosts();
     } catch (error) {
@@ -192,19 +196,33 @@ export default function Comunidade() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogTitle>{t('community.createPost')}</DialogTitle>
-                  <Textarea
-                    placeholder={t('community.postPlaceholder')}
-                    value={newPost}
-                    onChange={(e) => setNewPost(e.target.value)}
-                    rows={5}
-                  />
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                      {t('community.cancel')}
-                    </Button>
-                    <Button onClick={createPost}>
-                      {t('community.publish')}
-                    </Button>
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder={t('community.postPlaceholder')}
+                      value={newPost}
+                      onChange={(e) => setNewPost(e.target.value)}
+                      rows={5}
+                    />
+                    
+                    <FileUpload
+                      bucket="community"
+                      accept={{
+                        'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+                      }}
+                      maxSize={10 * 1024 * 1024}
+                      onUploadComplete={(url) => setPostImage(url)}
+                      currentUrl={postImage}
+                      label="Adicionar imagem ao post (opcional)"
+                    />
+
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                        {t('community.cancel')}
+                      </Button>
+                      <Button onClick={createPost}>
+                        {t('community.publish')}
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
