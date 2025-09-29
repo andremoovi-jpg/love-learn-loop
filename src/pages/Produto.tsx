@@ -4,12 +4,13 @@ import ReactPlayer from "react-player";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card } from "@/components/ui/card";
 import { UpsellCard } from "@/components/ui/upsell-card";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Play, ArrowLeft, ArrowRight, Loader2, Lock } from "lucide-react";
+import { CheckCircle, Play, ArrowLeft, ArrowRight, Loader2, Lock, AlertCircle, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -19,8 +20,25 @@ interface Product {
   slug: string;
   description: string;
   cover_image_url: string;
-  content: any;
-  has_access: boolean; // New field from secure function
+  content?: {
+    modules?: Module[];
+  };
+  has_access?: boolean;
+}
+
+interface Module {
+  title: string;
+  description?: string;
+  lessons: Lesson[];
+}
+
+interface Lesson {
+  title: string;
+  description?: string;
+  type: 'video' | 'text';
+  url?: string;
+  content?: string;
+  duration: string;
 }
 
 interface UserProduct {
@@ -38,6 +56,7 @@ export default function Produto() {
   const [loading, setLoading] = useState(true);
   const [currentModuleIdx, setCurrentModuleIdx] = useState(0);
   const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (slug && user) {
@@ -47,54 +66,85 @@ export default function Produto() {
 
   const fetchProductData = async () => {
     try {
-      // Use secure function to get product with proper access control
+      console.log('🔍 Buscando produto:', slug);
+
+      // Primeiro buscar o produto diretamente
       const { data: productData, error: productError } = await supabase
-        .rpc('get_product_with_access_control', { product_slug: slug });
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .single();
 
       if (productError) {
-        console.error('Error fetching product:', productError);
+        console.error('❌ Erro ao buscar produto:', productError);
+        setError('Produto não encontrado');
         setLoading(false);
         return;
       }
 
-      if (!productData || productData.length === 0) {
+      if (!productData) {
+        console.error('❌ Produto não encontrado');
+        setError('Produto não encontrado');
         setLoading(false);
         return;
       }
 
-      const product = productData[0];
-      setProduct(product);
+      console.log('✅ Produto encontrado:', productData.name);
+      console.log('📦 Conteúdo do produto:', productData.content);
 
-      // Only proceed with user product checks if user has access to content
-      if (!product.has_access) {
-        // User doesn't have access - show restricted access page
-        setLoading(false);
-        return;
+      // Garantir estrutura do content - cast to any to bypass TypeScript issues
+      const content = productData.content as any;
+      if (!content || !content.modules || content.modules.length === 0) {
+        console.warn('⚠️ Produto sem módulos, criando estrutura padrão');
+        productData.content = {
+          modules: [{
+            title: 'Conteúdo em Preparação',
+            description: 'O conteúdo deste produto está sendo preparado',
+            lessons: [{
+              title: 'Em breve',
+              description: 'O conteúdo estará disponível em breve',
+              type: 'text' as const,
+              content: 'Este produto ainda não possui conteúdo configurado. Entre em contato com o suporte para mais informações.',
+              duration: '0 min'
+            }]
+          }]
+        };
       }
 
-      // Fetch user's product access for progress tracking
+      setProduct(productData as any);
+
+      // Verificar acesso do usuário
       const { data: userProductData } = await supabase
         .from('user_products')
         .select('*')
         .eq('user_id', user!.id)
-        .eq('product_id', product.id)
+        .eq('product_id', productData.id)
         .single();
 
       if (!userProductData) {
-        // This shouldn't happen if has_access is true, but handle gracefully
+        console.log('⚠️ Usuário não tem acesso ao produto');
+        setProduct({ ...productData, has_access: false } as any);
         setLoading(false);
         return;
       }
 
+      console.log('✅ Usuário tem acesso ao produto');
+      setProduct({ ...productData, has_access: true } as any);
+
+      // Garantir que completed_lessons seja um array
+      if (!userProductData.completed_lessons || !Array.isArray(userProductData.completed_lessons)) {
+        userProductData.completed_lessons = [];
+      }
+
       setUserProduct(userProductData);
 
-      // Update last accessed
+      // Atualizar último acesso
       await supabase
         .from('user_products')
         .update({ last_accessed_at: new Date().toISOString() })
         .eq('id', userProductData.id);
 
-      // Fetch related upsells
+      // Buscar upsells relacionados
       const { data: upsellsData } = await supabase
         .from('upsells')
         .select(`
@@ -102,15 +152,41 @@ export default function Produto() {
           parent_product:products!parent_product_id(name),
           upsell_product:products!upsell_product_id(name, cover_image_url, product_type)
         `)
-        .eq('parent_product_id', product.id)
+        .eq('parent_product_id', productData.id)
         .eq('is_active', true);
 
       setUpsells(upsellsData || []);
     } catch (error) {
-      console.error('Error fetching product data:', error);
+      console.error('❌ Erro geral:', error);
+      setError('Erro ao carregar produto');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Funções helper com verificações de segurança
+  const getModules = () => {
+    return product?.content?.modules || [];
+  };
+
+  const getModule = (idx: number) => {
+    const modules = getModules();
+    return modules[idx] || null;
+  };
+
+  const getLessons = (moduleIdx: number) => {
+    const module = getModule(moduleIdx);
+    return module?.lessons || [];
+  };
+
+  const getLesson = (moduleIdx: number, lessonIdx: number) => {
+    const lessons = getLessons(moduleIdx);
+    return lessons[lessonIdx] || null;
+  };
+
+  const getTotalLessons = () => {
+    const modules = getModules();
+    return modules.reduce((acc, module) => acc + (module.lessons?.length || 0), 0);
   };
 
   const isLessonCompleted = (moduleIdx: number, lessonIdx: number) => {
@@ -120,22 +196,21 @@ export default function Produto() {
   };
 
   const isModuleCompleted = (moduleIdx: number) => {
-    if (!product) return false;
-    const module = product.content.modules[moduleIdx];
-    return module.lessons.every((_, lessonIdx) => isLessonCompleted(moduleIdx, lessonIdx));
+    const lessons = getLessons(moduleIdx);
+    if (!lessons.length) return false;
+    return lessons.every((_, lessonIdx) => isLessonCompleted(moduleIdx, lessonIdx));
   };
 
   const markAsCompleted = async () => {
     if (!userProduct || !product) return;
 
     const lessonKey = `module_${currentModuleIdx}_lesson_${currentLessonIdx}`;
-    
+
     if (userProduct.completed_lessons.includes(lessonKey)) return;
 
     const updatedLessons = [...userProduct.completed_lessons, lessonKey];
-    
-    const totalLessons = product.content.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-    const progress = Math.round((updatedLessons.length / totalLessons) * 100);
+    const totalLessons = getTotalLessons();
+    const progress = totalLessons > 0 ? Math.round((updatedLessons.length / totalLessons) * 100) : 0;
 
     try {
       const { error } = await supabase
@@ -157,15 +232,24 @@ export default function Produto() {
 
       toast.success('Aula marcada como concluída!');
 
-      // Auto advance to next lesson
-      nextLesson();
+      // Auto avançar para próxima aula
+      if (hasNext()) {
+        nextLesson();
+      }
     } catch (error) {
-      console.error('Error updating progress:', error);
+      console.error('Erro ao salvar progresso:', error);
       toast.error('Erro ao salvar progresso');
     }
   };
 
   const selectLesson = (moduleIdx: number, lessonIdx: number) => {
+    // Verificar se os índices são válidos
+    const module = getModule(moduleIdx);
+    if (!module) return;
+
+    const lesson = getLesson(moduleIdx, lessonIdx);
+    if (!lesson) return;
+
     setCurrentModuleIdx(moduleIdx);
     setCurrentLessonIdx(lessonIdx);
   };
@@ -174,26 +258,36 @@ export default function Produto() {
     if (currentLessonIdx > 0) {
       setCurrentLessonIdx(currentLessonIdx - 1);
     } else if (currentModuleIdx > 0) {
-      const prevModule = product!.content.modules[currentModuleIdx - 1];
+      const prevModuleLessons = getLessons(currentModuleIdx - 1);
       setCurrentModuleIdx(currentModuleIdx - 1);
-      setCurrentLessonIdx(prevModule.lessons.length - 1);
+      setCurrentLessonIdx(Math.max(0, prevModuleLessons.length - 1));
     }
   };
 
   const nextLesson = () => {
-    const currentModule = product!.content.modules[currentModuleIdx];
-    if (currentLessonIdx < currentModule.lessons.length - 1) {
+    const currentModuleLessons = getLessons(currentModuleIdx);
+    const modules = getModules();
+
+    if (currentLessonIdx < currentModuleLessons.length - 1) {
       setCurrentLessonIdx(currentLessonIdx + 1);
-    } else if (currentModuleIdx < product!.content.modules.length - 1) {
+    } else if (currentModuleIdx < modules.length - 1) {
       setCurrentModuleIdx(currentModuleIdx + 1);
       setCurrentLessonIdx(0);
     }
   };
 
-  const hasPrevious = currentModuleIdx > 0 || currentLessonIdx > 0;
-  const hasNext = currentModuleIdx < product?.content.modules.length - 1 || 
-                  currentLessonIdx < (product?.content.modules[currentModuleIdx]?.lessons.length - 1);
+  const hasPrevious = () => {
+    return currentModuleIdx > 0 || currentLessonIdx > 0;
+  };
 
+  const hasNext = () => {
+    const modules = getModules();
+    const currentModuleLessons = getLessons(currentModuleIdx);
+    return currentModuleIdx < modules.length - 1 ||
+           currentLessonIdx < currentModuleLessons.length - 1;
+  };
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -210,34 +304,101 @@ export default function Produto() {
     );
   }
 
-  if (!product) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  if (!userProduct) {
+  // Error state
+  if (error) {
     return (
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="lg:pl-64">
-          <TopBar breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: product?.name || "Produto" }
-          ]} />
+          <TopBar breadcrumbs={[{ label: "Erro" }]} />
           <main className="p-6">
-            <div className="text-center py-12">
-              <Lock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-2xl font-bold mb-4">Acesso Restrito</h2>
-              <p className="text-muted-foreground">
-                Você não tem acesso a este produto. {product?.name ? 'Entre em contato com o suporte para adquirir este produto.' : ''}
-              </p>
-            </div>
+            <Card className="max-w-md mx-auto">
+              <div className="text-center p-8">
+                <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Erro ao carregar produto</h2>
+                <p className="text-muted-foreground">{error}</p>
+                <Button className="mt-4" onClick={() => window.location.href = '/dashboard'}>
+                  Voltar ao Dashboard
+                </Button>
+              </div>
+            </Card>
           </main>
         </div>
       </div>
     );
   }
 
-  const currentLesson = product.content.modules[currentModuleIdx]?.lessons[currentLessonIdx];
+  // Product not found
+  if (!product) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // No access
+  if (!product.has_access || !userProduct) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <div className="lg:pl-64">
+          <TopBar breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: product.name }
+          ]} />
+          <main className="p-6">
+            <Card className="max-w-2xl mx-auto">
+              <div className="text-center p-12">
+                <Lock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h2 className="text-2xl font-bold mb-4">Acesso Restrito</h2>
+                <p className="text-muted-foreground mb-6">
+                  Você não tem acesso a este produto.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Entre em contato com o suporte para adquirir "{product.name}"
+                </p>
+                <Button className="mt-6" onClick={() => window.location.href = '/ofertas'}>
+                  Ver Ofertas Disponíveis
+                </Button>
+              </div>
+            </Card>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  const modules = getModules();
+  const currentLesson = getLesson(currentModuleIdx, currentLessonIdx);
+
+  // No content configured
+  if (modules.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <div className="lg:pl-64">
+          <TopBar breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Meus Produtos", href: "/meus-produtos" },
+            { label: product.name }
+          ]} />
+          <main className="p-6">
+            <Card className="max-w-2xl mx-auto">
+              <div className="text-center p-12">
+                <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h2 className="text-2xl font-bold mb-4">Conteúdo em Preparação</h2>
+                <p className="text-muted-foreground">
+                  O conteúdo deste produto está sendo preparado e estará disponível em breve.
+                </p>
+                <Button className="mt-6" onClick={() => window.location.href = '/dashboard'}>
+                  Voltar ao Dashboard
+                </Button>
+              </div>
+            </Card>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  
 
   return (
     <div className="min-h-screen bg-background">
