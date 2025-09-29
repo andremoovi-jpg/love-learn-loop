@@ -289,6 +289,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_admin: boolean | null
+          is_suspended: boolean | null
           phone: string | null
           total_points: number | null
           updated_at: string
@@ -300,6 +301,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          is_suspended?: boolean | null
           phone?: string | null
           total_points?: number | null
           updated_at?: string
@@ -311,6 +313,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          is_suspended?: boolean | null
           phone?: string | null
           total_points?: number | null
           updated_at?: string
