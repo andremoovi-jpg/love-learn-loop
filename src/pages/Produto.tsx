@@ -35,10 +35,18 @@ interface Module {
 interface Lesson {
   title: string;
   description?: string;
-  type: 'video' | 'text';
+  type: 'video' | 'text' | 'pdf' | 'quiz' | 'download' | 'embed' | 'video_with_attachments';
   url?: string;
+  video_url?: string;
   content?: string;
   duration: string;
+  attachments?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    type?: string;
+    description?: string;
+  }>;
 }
 
 interface UserProduct {
@@ -481,9 +489,10 @@ export default function Produto() {
               {currentLesson && (
                 <div className="space-y-6">
                   <div className="bg-black rounded-lg aspect-video overflow-hidden">
-                    {currentLesson.type === 'video' && currentLesson.url ? (
+                    {(currentLesson.type === 'video' || currentLesson.type === 'video_with_attachments') &&
+                     (currentLesson.url || currentLesson.video_url) ? (
                       <ReactPlayer
-                        url={currentLesson.url}
+                        url={currentLesson.url || currentLesson.video_url}
                         width="100%"
                         height="100%"
                         controls
@@ -493,15 +502,64 @@ export default function Produto() {
                           }
                         }}
                       />
+                    ) : currentLesson.type === 'pdf' && currentLesson.url ? (
+                      <iframe
+                        src={currentLesson.url}
+                        className="w-full h-full"
+                        title={currentLesson.title}
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-center text-white">
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <div className="text-center">
                           <Play className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                          <p>Conteúdo de texto disponível abaixo</p>
+                          <p className="text-muted-foreground">
+                            {currentLesson.type === 'text' ? 'Conteúdo de texto disponível abaixo' : 'Conteúdo não disponível'}
+                          </p>
                         </div>
                       </div>
                     )}
                   </div>
+
+                  {/* Attachments Section */}
+                  {currentLesson.attachments && currentLesson.attachments.length > 0 && (
+                    <Card className="p-4">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <Download className="h-5 w-5" />
+                        Materiais Complementares
+                      </h3>
+                      <div className="space-y-2">
+                        {currentLesson.attachments.map((attachment) => (
+                          <a
+                            key={attachment.id}
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              {attachment.type === 'pdf' ? (
+                                <File className="h-5 w-5 text-red-500" />
+                              ) : attachment.type === 'doc' ? (
+                                <FileText className="h-5 w-5 text-blue-500" />
+                              ) : (
+                                <Download className="h-5 w-5 text-muted-foreground" />
+                              )}
+                              <div>
+                                <p className="font-medium">{attachment.name || 'Anexo'}</p>
+                                {attachment.description && (
+                                  <p className="text-sm text-muted-foreground">{attachment.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              <Download className="mr-2 h-4 w-4" />
+                              Baixar
+                            </Button>
+                          </a>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
 
                   {/* Lesson Info */}
                   <div>

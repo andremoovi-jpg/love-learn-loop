@@ -79,9 +79,10 @@ interface Lesson {
   id: string;
   title: string;
   description?: string;
-  type: 'video' | 'text' | 'pdf' | 'quiz' | 'download' | 'embed';
+  type: 'video' | 'text' | 'pdf' | 'quiz' | 'download' | 'embed' | 'video_with_attachments';
   content?: string; // Para texto ou HTML
   url?: string; // Para vídeos, PDFs, ou links externos
+  video_url?: string; // URL do vídeo quando tem anexos
   duration?: string;
   attachments?: Attachment[];
   quiz_questions?: QuizQuestion[];
@@ -93,7 +94,8 @@ interface Attachment {
   name: string;
   url: string;
   size?: string;
-  type: string;
+  type: 'pdf' | 'doc' | 'xls' | 'zip' | 'image' | 'other';
+  description?: string;
 }
 
 interface QuizQuestion {
@@ -832,6 +834,14 @@ export default function AdminProdutos() {
                                   <Download className="mr-2 h-4 w-4" />
                                   + Anexo
                                 </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => addLesson(module.id, 'video_with_attachments')}
+                                >
+                                  <Video className="mr-2 h-4 w-4" />
+                                  + Vídeo com Anexos
+                                </Button>
                               </div>
 
                               {/* Lessons List */}
@@ -897,6 +907,102 @@ export default function AdminProdutos() {
                                           <p className="text-sm text-muted-foreground">
                                             Quiz: Configure as perguntas após salvar o produto
                                           </p>
+                                        </div>
+                                      )}
+
+                                      {lesson.type === 'download' && (
+                                        <div className="space-y-2">
+                                          <Input
+                                            value={lesson.url || ''}
+                                            onChange={(e) => updateLesson(module.id, lesson.id, {
+                                              url: e.target.value
+                                            })}
+                                            placeholder="URL do arquivo para download"
+                                          />
+                                          <Input
+                                            placeholder="Nome do arquivo"
+                                          />
+                                        </div>
+                                      )}
+
+                                      {lesson.type === 'video_with_attachments' && (
+                                        <div className="space-y-3">
+                                          {/* URL do Vídeo */}
+                                          <div>
+                                            <label className="text-xs font-medium text-muted-foreground">URL do Vídeo</label>
+                                            <Input
+                                              value={lesson.video_url || ''}
+                                              onChange={(e) => updateLesson(module.id, lesson.id, {
+                                                video_url: e.target.value
+                                              })}
+                                              placeholder="URL do vídeo (YouTube, Vimeo, etc)"
+                                            />
+                                          </div>
+
+                                          {/* Anexos */}
+                                          <div>
+                                            <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                              Anexos da Aula
+                                            </label>
+
+                                            {/* Lista de anexos existentes */}
+                                            {(lesson.attachments || []).map((attachment, idx) => (
+                                              <div key={attachment.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
+                                                <File className="h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                  value={attachment.name}
+                                                  onChange={(e) => {
+                                                    const newAttachments = [...(lesson.attachments || [])];
+                                                    newAttachments[idx] = { ...attachment, name: e.target.value };
+                                                    updateLesson(module.id, lesson.id, { attachments: newAttachments });
+                                                  }}
+                                                  placeholder="Nome do arquivo"
+                                                  className="flex-1"
+                                                />
+                                                <Input
+                                                  value={attachment.url}
+                                                  onChange={(e) => {
+                                                    const newAttachments = [...(lesson.attachments || [])];
+                                                    newAttachments[idx] = { ...attachment, url: e.target.value };
+                                                    updateLesson(module.id, lesson.id, { attachments: newAttachments });
+                                                  }}
+                                                  placeholder="URL do arquivo"
+                                                  className="flex-1"
+                                                />
+                                                <Button
+                                                  size="sm"
+                                                  variant="ghost"
+                                                  onClick={() => {
+                                                    const newAttachments = lesson.attachments?.filter((_, i) => i !== idx) || [];
+                                                    updateLesson(module.id, lesson.id, { attachments: newAttachments });
+                                                  }}
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                              </div>
+                                            ))}
+
+                                            {/* Botão para adicionar novo anexo */}
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => {
+                                                const newAttachment: Attachment = {
+                                                  id: generateId(),
+                                                  name: '',
+                                                  url: '',
+                                                  type: 'pdf'
+                                                };
+                                                updateLesson(module.id, lesson.id, {
+                                                  attachments: [...(lesson.attachments || []), newAttachment]
+                                                });
+                                              }}
+                                              className="w-full"
+                                            >
+                                              <Plus className="mr-2 h-4 w-4" />
+                                              Adicionar Anexo
+                                            </Button>
+                                          </div>
                                         </div>
                                       )}
 

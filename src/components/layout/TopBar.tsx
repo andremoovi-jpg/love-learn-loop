@@ -1,4 +1,4 @@
-import { Search, Bell, User } from "lucide-react";
+import { Search, Bell, User, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface TopBarProps {
   title?: string;
@@ -27,19 +28,19 @@ export function TopBar({ title, breadcrumbs }: TopBarProps) {
       {/* Left side - Title and Breadcrumbs */}
       <div className="flex items-center space-x-4">
         {breadcrumbs ? (
-          <nav className="flex items-center space-x-2 text-sm">
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
             {breadcrumbs.map((crumb, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                {index > 0 && <span className="text-muted-foreground">/</span>}
+              <div key={index} className="flex items-center gap-2">
+                {index > 0 && <ChevronRight className="h-4 w-4" />}
                 {crumb.href ? (
-                  <button
-                    onClick={() => navigate(crumb.href!)}
-                    className="text-muted-foreground hover:text-foreground transition-base"
+                  <Link
+                    to={crumb.href}
+                    className="hover:text-foreground transition-colors"
                   >
                     {crumb.label}
-                  </button>
+                  </Link>
                 ) : (
-                  <span className="font-medium text-foreground">{crumb.label}</span>
+                  <span className="text-foreground font-medium">{crumb.label}</span>
                 )}
               </div>
             ))}
@@ -61,17 +62,7 @@ export function TopBar({ title, breadcrumbs }: TopBarProps) {
         </div>
 
         {/* Notifications */}
-        <div className="relative">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <Badge
-              variant="secondary"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-primary text-primary-foreground"
-            >
-              3
-            </Badge>
-          </Button>
-        </div>
+        <NotificationBell />
 
         {/* User Menu */}
         <DropdownMenu>
