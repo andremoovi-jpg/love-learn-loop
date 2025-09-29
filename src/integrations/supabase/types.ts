@@ -194,6 +194,33 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_info_private: {
+        Row: {
+          created_at: string | null
+          email_verified: string | null
+          id: string
+          phone_verified: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_verified?: string | null
+          id?: string
+          phone_verified?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_verified?: string | null
+          id?: string
+          phone_verified?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string
@@ -709,6 +736,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_product: {
+        Args: { product_id_param: string }
+        Returns: boolean
+      }
       can_access_product_content: {
         Args: { product_id: string }
         Returns: boolean
@@ -732,6 +763,10 @@ export type Database = {
       decrement_likes: {
         Args: { post_id: string }
         Returns: undefined
+      }
+      get_admin_users_list: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       get_community_profiles: {
         Args: Record<PropertyKey, never>
@@ -850,22 +885,6 @@ export type Database = {
           avatar_url: string
           full_name: string
           id: string
-        }[]
-      }
-      get_users_with_email_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          avatar_url: string
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          is_admin: boolean
-          is_suspended: boolean
-          phone: string
-          total_points: number
-          total_products: number
-          user_id: string
         }[]
       }
       increment_likes: {
