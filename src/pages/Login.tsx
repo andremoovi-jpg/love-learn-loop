@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
+import { sanitizeEmail } from "@/utils/sanitize";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -58,8 +59,8 @@ export default function Login() {
     setLoading(true);
     
     try {
-      // Sanitizar input do email
-      const sanitizedEmail = sanitizeInput(email).toLowerCase();
+      // Sanitizar input do email usando função específica
+      const sanitizedEmail = sanitizeEmail(email);
       
       const result = await login(sanitizedEmail, password);
       

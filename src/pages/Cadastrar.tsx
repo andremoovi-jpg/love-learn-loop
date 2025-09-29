@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { sanitizeInput, isValidEmail, RateLimiter } from "@/utils/security";
 import { validatePasswordSecurity } from "@/utils/passwordSecurity";
+import { sanitizeName, sanitizeEmail } from "@/utils/sanitize";
 
 export default function Cadastrar() {
   const [fullName, setFullName] = useState("");
@@ -109,9 +110,9 @@ export default function Cadastrar() {
     setLoading(true);
     
     try {
-      // Sanitizar inputs
-      const sanitizedName = sanitizeInput(fullName);
-      const sanitizedEmail = sanitizeInput(email).toLowerCase();
+      // Sanitizar inputs usando funções específicas
+      const sanitizedName = sanitizeName(fullName);
+      const sanitizedEmail = sanitizeEmail(email);
       
       const { error } = await signUp(sanitizedEmail, password, sanitizedName);
       
