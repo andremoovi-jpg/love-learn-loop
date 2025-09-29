@@ -663,6 +663,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_is_admin: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_endpoint: string
