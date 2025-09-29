@@ -1,45 +1,135 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash, X, Edit } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  GraduationCap,
+  BookOpen,
+  Video,
+  FileText,
+  Clock,
+  Link,
+  File,
+  HelpCircle,
+  Download,
+  ChevronUp,
+  ChevronDown,
+  Copy,
+  Save
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Product } from "@/types";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  cover_image_url: string;
+  product_type: string;
+  level: string;
+  estimated_duration: string;
+  cartpanda_product_id?: string;
+  content?: {
+    modules: Module[];
+  };
+  created_at: string;
+}
+
 interface Module {
+  id: string;
   title: string;
+  description?: string;
+  order: number;
   lessons: Lesson[];
 }
 
 interface Lesson {
+  id: string;
   title: string;
-  type: 'video' | 'pdf' | 'text';
+  description?: string;
+  type: 'video' | 'text' | 'pdf' | 'quiz' | 'download' | 'embed';
+  content?: string; // Para texto ou HTML
+  url?: string; // Para vídeos, PDFs, ou links externos
+  duration?: string;
+  attachments?: Attachment[];
+  quiz_questions?: QuizQuestion[];
+  order: number;
+}
+
+interface Attachment {
+  id: string;
+  name: string;
   url: string;
+  size?: string;
+  type: string;
+}
+
+interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct_answer: number;
+  explanation?: string;
 }
 
 export default function AdminProdutos() {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   // Form states
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [description, setDescription] = useState("");
-  const [cartpandaId, setCartpandaId] = useState("");
-  const [type, setType] = useState("course");
-  const [coverImage, setCoverImage] = useState("");
-  const [modules, setModules] = useState<Module[]>([]);
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    description: '',
+    cover_image_url: '',
+    product_type: 'course',
+    level: 'beginner',
+    estimated_duration: '',
+    cartpanda_product_id: '',
+    content: {
+      modules: [] as Module[]
+    }
+  });
+
+  // Module/Lesson editing states
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.is_admin) {
@@ -55,9 +145,18 @@ export default function AdminProdutos() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+
+      // Parse content field if it's a string
+      const parsedProducts = (data || []).map(product => ({
+        ...product,
+        content: typeof product.content === 'string'
+          ? JSON.parse(product.content)
+          : product.content
+      }));
+
+      setProducts(parsedProducts);
     } catch (error) {
-      console.error('Erro ao carregar produtos:', error);
+      console.error('Error loading products:', error);
       toast.error('Erro ao carregar produtos');
     } finally {
       setLoading(false);
@@ -66,147 +165,304 @@ export default function AdminProdutos() {
 
   const openDialog = (product?: Product) => {
     if (product) {
-      setEditing(product);
-      setName(product.name);
-      setSlug(product.slug);
-      setDescription(product.description || "");
-      setCartpandaId(product.cartpanda_product_id || "");
-      setType(product.product_type);
-      setCoverImage(product.cover_image_url || "");
-      
-      // Parse content to modules
-      if (product.content) {
-        try {
-          const content = typeof product.content === 'string' 
-            ? JSON.parse(product.content) 
-            : product.content;
-          setModules(content.modules || []);
-        } catch {
-          setModules([]);
-        }
-      } else {
-        setModules([]);
-      }
+      setEditingProduct(product);
+      setFormData({
+        name: product.name,
+        slug: product.slug,
+        description: product.description,
+        cover_image_url: product.cover_image_url,
+        product_type: product.product_type,
+        level: product.level,
+        estimated_duration: product.estimated_duration,
+        cartpanda_product_id: product.cartpanda_product_id || '',
+        content: product.content || { modules: [] }
+      });
     } else {
-      setEditing(null);
-      resetForm();
+      setEditingProduct(null);
+      setFormData({
+        name: '',
+        slug: '',
+        description: '',
+        cover_image_url: '',
+        product_type: 'course',
+        level: 'beginner',
+        estimated_duration: '',
+        cartpanda_product_id: '',
+        content: { modules: [] }
+      });
     }
     setDialogOpen(true);
   };
 
-  const resetForm = () => {
-    setName("");
-    setSlug("");
-    setDescription("");
-    setCartpandaId("");
-    setType("course");
-    setCoverImage("");
-    setModules([]);
-  };
+  const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const addModule = () => {
-    setModules([...modules, { title: "", lessons: [] }]);
+    const newModule: Module = {
+      id: generateId(),
+      title: `Módulo ${formData.content.modules.length + 1}`,
+      description: '',
+      order: formData.content.modules.length,
+      lessons: []
+    };
+
+    setFormData({
+      ...formData,
+      content: {
+        modules: [...formData.content.modules, newModule]
+      }
+    });
+
+    setEditingModule(newModule);
+    setSelectedModuleId(newModule.id);
   };
 
-  const removeModule = (index: number) => {
-    setModules(modules.filter((_, i) => i !== index));
+  const updateModule = (moduleId: string, updates: Partial<Module>) => {
+    setFormData({
+      ...formData,
+      content: {
+        modules: formData.content.modules.map(m =>
+          m.id === moduleId ? { ...m, ...updates } : m
+        )
+      }
+    });
   };
 
-  const updateModule = (index: number, field: string, value: string) => {
-    const newModules = [...modules];
-    (newModules[index] as any)[field] = value;
-    setModules(newModules);
+  const deleteModule = (moduleId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este módulo e todas as suas aulas?')) return;
+
+    setFormData({
+      ...formData,
+      content: {
+        modules: formData.content.modules
+          .filter(m => m.id !== moduleId)
+          .map((m, idx) => ({ ...m, order: idx }))
+      }
+    });
+
+    if (selectedModuleId === moduleId) {
+      setSelectedModuleId(null);
+    }
   };
 
-  const addLesson = (moduleIndex: number) => {
-    const newModules = [...modules];
-    newModules[moduleIndex].lessons.push({ title: "", type: "video", url: "" });
-    setModules(newModules);
+  const moveModule = (moduleId: string, direction: 'up' | 'down') => {
+    const modules = [...formData.content.modules];
+    const index = modules.findIndex(m => m.id === moduleId);
+
+    if (direction === 'up' && index > 0) {
+      [modules[index], modules[index - 1]] = [modules[index - 1], modules[index]];
+    } else if (direction === 'down' && index < modules.length - 1) {
+      [modules[index], modules[index + 1]] = [modules[index + 1], modules[index]];
+    }
+
+    setFormData({
+      ...formData,
+      content: {
+        modules: modules.map((m, idx) => ({ ...m, order: idx }))
+      }
+    });
   };
 
-  const removeLesson = (moduleIndex: number, lessonIndex: number) => {
-    const newModules = [...modules];
-    newModules[moduleIndex].lessons = newModules[moduleIndex].lessons.filter((_, i) => i !== lessonIndex);
-    setModules(newModules);
+  const addLesson = (moduleId: string, type: Lesson['type']) => {
+    const module = formData.content.modules.find(m => m.id === moduleId);
+    if (!module) return;
+
+    const newLesson: Lesson = {
+      id: generateId(),
+      title: `Aula ${module.lessons.length + 1}`,
+      description: '',
+      type,
+      order: module.lessons.length,
+      duration: '5 min',
+      url: '',
+      content: '',
+      attachments: [],
+      quiz_questions: []
+    };
+
+    updateModule(moduleId, {
+      lessons: [...module.lessons, newLesson]
+    });
+
+    setEditingLesson(newLesson);
   };
 
-  const updateLesson = (moduleIndex: number, lessonIndex: number, field: string, value: string) => {
-    const newModules = [...modules];
-    (newModules[moduleIndex].lessons[lessonIndex] as any)[field] = value;
-    setModules(newModules);
+  const updateLesson = (moduleId: string, lessonId: string, updates: Partial<Lesson>) => {
+    const module = formData.content.modules.find(m => m.id === moduleId);
+    if (!module) return;
+
+    updateModule(moduleId, {
+      lessons: module.lessons.map(l =>
+        l.id === lessonId ? { ...l, ...updates } : l
+      )
+    });
   };
 
-  const saveProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const deleteLesson = (moduleId: string, lessonId: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta aula?')) return;
+
+    const module = formData.content.modules.find(m => m.id === moduleId);
+    if (!module) return;
+
+    updateModule(moduleId, {
+      lessons: module.lessons
+        .filter(l => l.id !== lessonId)
+        .map((l, idx) => ({ ...l, order: idx }))
+    });
+
+    if (editingLesson?.id === lessonId) {
+      setEditingLesson(null);
+    }
+  };
+
+  const moveLesson = (moduleId: string, lessonId: string, direction: 'up' | 'down') => {
+    const module = formData.content.modules.find(m => m.id === moduleId);
+    if (!module) return;
+
+    const lessons = [...module.lessons];
+    const index = lessons.findIndex(l => l.id === lessonId);
+
+    if (direction === 'up' && index > 0) {
+      [lessons[index], lessons[index - 1]] = [lessons[index - 1], lessons[index]];
+    } else if (direction === 'down' && index < lessons.length - 1) {
+      [lessons[index], lessons[index + 1]] = [lessons[index + 1], lessons[index]];
+    }
+
+    updateModule(moduleId, {
+      lessons: lessons.map((l, idx) => ({ ...l, order: idx }))
+    });
+  };
+
+  const duplicateModule = (moduleId: string) => {
+    const module = formData.content.modules.find(m => m.id === moduleId);
+    if (!module) return;
+
+    const newModule: Module = {
+      ...module,
+      id: generateId(),
+      title: `${module.title} (Cópia)`,
+      order: formData.content.modules.length,
+      lessons: module.lessons.map(l => ({
+        ...l,
+        id: generateId()
+      }))
+    };
+
+    setFormData({
+      ...formData,
+      content: {
+        modules: [...formData.content.modules, newModule]
+      }
+    });
+
+    toast.success('Módulo duplicado com sucesso!');
+  };
+
+  const handleSubmit = async () => {
     try {
-      // Ensure we have proper content structure
-      const contentData = modules.length > 0 
-        ? { modules } 
-        : {
-            modules: [{
+      if (!formData.name || !formData.slug) {
+        toast.error('Preencha todos os campos obrigatórios');
+        return;
+      }
+
+      // Ensure modules have proper structure
+      const contentToSave = {
+        modules: formData.content.modules.length > 0
+          ? formData.content.modules
+          : [{
+              id: generateId(),
               title: 'Módulo 1 - Introdução',
+              description: 'Módulo inicial do produto',
+              order: 0,
               lessons: [{
+                id: generateId(),
                 title: 'Aula 1 - Bem-vindo',
-                type: 'video' as const,
-                url: ''
+                description: 'Aula de boas-vindas',
+                type: 'text' as const,
+                content: 'Bem-vindo ao curso!',
+                duration: '5 min',
+                order: 0
               }]
             }]
-          };
-
-      const productData = {
-        name,
-        slug,
-        description,
-        cartpanda_product_id: cartpandaId,
-        product_type: type,
-        cover_image_url: coverImage,
-        level: 'beginner', // Default level
-        estimated_duration: '1 hora', // Default duration
-        content: contentData as any, // Save as JSONB, not stringified
-        is_active: true
       };
 
-      if (editing) {
+      const productData = {
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description,
+        cover_image_url: formData.cover_image_url,
+        product_type: formData.product_type,
+        level: formData.level,
+        estimated_duration: formData.estimated_duration,
+        cartpanda_product_id: formData.cartpanda_product_id || null,
+        content: contentToSave as any
+      };
+
+      console.log('Salvando produto:', productData);
+
+      if (editingProduct) {
         const { error } = await supabase
           .from('products')
           .update(productData)
-          .eq('id', editing.id);
-        
+          .eq('id', editingProduct.id);
+
         if (error) throw error;
         toast.success('Produto atualizado com sucesso!');
       } else {
         const { error } = await supabase
           .from('products')
           .insert(productData);
-        
+
         if (error) throw error;
         toast.success('Produto criado com sucesso!');
       }
 
       setDialogOpen(false);
       loadProducts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar produto:', error);
-      toast.error('Erro ao salvar produto');
+      toast.error(`Erro ao salvar produto: ${error.message}`);
     }
   };
 
-  const deleteProduct = async (productId: string) => {
+  const deleteProduct = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
 
     try {
       const { error } = await supabase
         .from('products')
         .delete()
-        .eq('id', productId);
+        .eq('id', id);
 
       if (error) throw error;
       toast.success('Produto excluído com sucesso!');
       loadProducts();
     } catch (error) {
-      console.error('Erro ao excluir produto:', error);
+      console.error('Error deleting product:', error);
       toast.error('Erro ao excluir produto');
+    }
+  };
+
+  const getLessonIcon = (type: Lesson['type']) => {
+    switch (type) {
+      case 'video': return <Video className="h-4 w-4" />;
+      case 'text': return <FileText className="h-4 w-4" />;
+      case 'pdf': return <File className="h-4 w-4" />;
+      case 'quiz': return <HelpCircle className="h-4 w-4" />;
+      case 'download': return <Download className="h-4 w-4" />;
+      case 'embed': return <Link className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getLessonTypeName = (type: Lesson['type']) => {
+    switch (type) {
+      case 'video': return 'Vídeo';
+      case 'text': return 'Texto';
+      case 'pdf': return 'PDF';
+      case 'quiz': return 'Quiz';
+      case 'download': return 'Download';
+      case 'embed': return 'Embed';
+      default: return 'Texto';
     }
   };
 
@@ -221,23 +477,12 @@ export default function AdminProdutos() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground">Carregando produtos...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      
+
       <div className="lg:pl-64">
-        <TopBar 
+        <TopBar
           title="Produtos"
           breadcrumbs={[
             { label: "Admin", href: "/admin" },
@@ -252,193 +497,501 @@ export default function AdminProdutos() {
                 <h1 className="text-4xl font-bold text-foreground mb-2">Produtos</h1>
                 <p className="text-muted-foreground">Gerencie todos os produtos da plataforma</p>
               </div>
-              <Button onClick={() => openDialog()}>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button onClick={() => openDialog()} className="gradient-primary">
+                <Plus className="mr-2 h-4 w-4" />
                 Novo Produto
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map(product => (
-                <Card key={product.id} className="p-6">
-                  {product.cover_image_url && (
-                    <img 
-                      src={product.cover_image_url} 
-                      alt={product.name}
-                      className="w-full h-48 object-cover rounded mb-4" 
-                    />
-                  )}
-                  <h3 className="text-xl font-bold mb-2">{product.name}</h3>
-                  <Badge className="mb-4">{product.product_type}</Badge>
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                    {product.description}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => openDialog(product)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button variant="ghost" onClick={() => deleteProduct(product.id)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Nível</TableHead>
+                    <TableHead>Módulos</TableHead>
+                    <TableHead>CartPanda ID</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map(product => {
+                    const moduleCount = product.content?.modules?.length || 0;
+                    const lessonCount = product.content?.modules?.reduce(
+                      (acc, m) => acc + (m.lessons?.length || 0), 0
+                    ) || 0;
 
-            {products.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Nenhum produto encontrado</p>
-                <Button onClick={() => openDialog()} className="mt-4">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Primeiro Produto
-                </Button>
-              </div>
-            )}
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            {product.cover_image_url && (
+                              <img
+                                src={product.cover_image_url}
+                                alt={product.name}
+                                className="w-10 h-10 rounded object-cover"
+                              />
+                            )}
+                            <div>
+                              <p className="font-medium">{product.name}</p>
+                              <p className="text-sm text-muted-foreground">/{product.slug}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {product.product_type === 'course' ? 'Curso' :
+                             product.product_type === 'ebook' ? 'E-book' :
+                             'Mentoria'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {product.level === 'beginner' ? 'Iniciante' :
+                             product.level === 'intermediate' ? 'Intermediário' :
+                             'Avançado'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <p>{moduleCount} módulos</p>
+                            <p className="text-muted-foreground">{lessonCount} aulas</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {product.cartpanda_product_id || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openDialog(product)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteProduct(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              {products.length === 0 && (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Nenhum produto cadastrado</p>
+                </div>
+              )}
+            </Card>
           </div>
         </main>
-      </div>
 
-      {/* Dialog Criar/Editar */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogTitle>{editing ? 'Editar' : 'Novo'} Produto</DialogTitle>
+        {/* Dialog de Produto */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>
+                {editingProduct ? 'Editar Produto' : 'Novo Produto'}
+              </DialogTitle>
+              <DialogDescription>
+                Configure todos os detalhes do produto
+              </DialogDescription>
+            </DialogHeader>
 
-          <form onSubmit={saveProduct} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
+            <Tabs defaultValue="info" className="flex-1 overflow-hidden flex flex-col">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="info">Informações</TabsTrigger>
+                <TabsTrigger value="content">Conteúdo</TabsTrigger>
+              </TabsList>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Slug</label>
-                <Input value={slug} onChange={(e) => setSlug(e.target.value)} required />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">CartPanda ID</label>
-                <Input value={cartpandaId} onChange={(e) => setCartpandaId(e.target.value)} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Tipo</label>
-                <Select value={type} onValueChange={setType}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="course">Curso</SelectItem>
-                    <SelectItem value="ebook">E-book</SelectItem>
-                    <SelectItem value="mentorship">Mentoria</SelectItem>
-                    <SelectItem value="program">Programa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Descrição</label>
-              <Textarea 
-                value={description} 
-                onChange={(e) => setDescription(e.target.value)} 
-                rows={4} 
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">URL da Imagem de Capa</label>
-              <Input 
-                type="url" 
-                value={coverImage} 
-                onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
-            </div>
-
-            {/* Editor de Módulos */}
-            <div>
-              <div className="flex justify-between mb-4">
-                <h3 className="text-lg font-bold">Módulos e Aulas</h3>
-                <Button type="button" onClick={addModule}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Módulo
-                </Button>
-              </div>
-
-              {modules.map((module, mIdx) => (
-                <Card key={mIdx} className="p-4 mb-4">
-                  <div className="flex gap-4 mb-4">
+              <TabsContent value="info" className="space-y-4 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Nome *</label>
                     <Input
-                      placeholder="Título do Módulo"
-                      value={module.title}
-                      onChange={(e) => updateModule(mIdx, 'title', e.target.value)}
-                      className="flex-1"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Nome do produto"
                     />
-                    <Button type="button" variant="ghost" onClick={() => removeModule(mIdx)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
                   </div>
+                  <div>
+                    <label className="text-sm font-medium">Slug *</label>
+                    <Input
+                      value={formData.slug}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        slug: e.target.value.toLowerCase().replace(/\s+/g, '-')
+                      })}
+                      placeholder="nome-do-produto"
+                    />
+                  </div>
+                </div>
 
-                  <div className="ml-6 space-y-2">
-                    {module.lessons.map((lesson, lIdx) => (
-                      <div key={lIdx} className="flex gap-2">
-                        <Input
-                          placeholder="Título da Aula"
-                          value={lesson.title}
-                          onChange={(e) => updateLesson(mIdx, lIdx, 'title', e.target.value)}
-                          className="flex-1"
-                        />
-                        <Select
-                          value={lesson.type}
-                          onValueChange={(v) => updateLesson(mIdx, lIdx, 'type', v)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="video">Vídeo</SelectItem>
-                            <SelectItem value="pdf">PDF</SelectItem>
-                            <SelectItem value="text">Texto</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder="URL"
-                          value={lesson.url}
-                          onChange={(e) => updateLesson(mIdx, lIdx, 'url', e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          onClick={() => removeLesson(mIdx, lIdx)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                <div>
+                  <label className="text-sm font-medium">Descrição</label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Descrição do produto"
+                    rows={3}
+                  />
+                </div>
 
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => addLesson(mIdx)}
+                <div>
+                  <label className="text-sm font-medium">URL da Imagem de Capa</label>
+                  <Input
+                    value={formData.cover_image_url}
+                    onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                  />
+                  {formData.cover_image_url && (
+                    <img
+                      src={formData.cover_image_url}
+                      alt="Preview"
+                      className="mt-2 h-32 object-cover rounded"
+                    />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Tipo</label>
+                    <Select
+                      value={formData.product_type}
+                      onValueChange={(value) => setFormData({ ...formData, product_type: value })}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Aula
-                    </Button>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="course">Curso</SelectItem>
+                        <SelectItem value="ebook">E-book</SelectItem>
+                        <SelectItem value="mentorship">Mentoria</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </Card>
-              ))}
-            </div>
 
-            <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                  <div>
+                    <label className="text-sm font-medium">Nível</label>
+                    <Select
+                      value={formData.level}
+                      onValueChange={(value) => setFormData({ ...formData, level: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Iniciante</SelectItem>
+                        <SelectItem value="intermediate">Intermediário</SelectItem>
+                        <SelectItem value="advanced">Avançado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Duração Estimada</label>
+                    <Input
+                      value={formData.estimated_duration}
+                      onChange={(e) => setFormData({ ...formData, estimated_duration: e.target.value })}
+                      placeholder="Ex: 4 horas"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">CartPanda Product ID</label>
+                  <Input
+                    value={formData.cartpanda_product_id}
+                    onChange={(e) => setFormData({ ...formData, cartpanda_product_id: e.target.value })}
+                    placeholder="ID do produto no CartPanda (opcional)"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="content" className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex gap-4 mb-4">
+                  <Button onClick={addModule} size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar Módulo
+                  </Button>
+                  <div className="flex-1 text-sm text-muted-foreground flex items-center">
+                    {formData.content.modules.length} módulos •
+                    {formData.content.modules.reduce((acc, m) => acc + m.lessons.length, 0)} aulas totais
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-4">
+                  {formData.content.modules.map((module, moduleIdx) => (
+                    <Card key={module.id} className="p-4">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <Input
+                            value={module.title}
+                            onChange={(e) => updateModule(module.id, { title: e.target.value })}
+                            placeholder="Título do módulo"
+                            className="font-semibold mb-2"
+                          />
+                          <Textarea
+                            value={module.description}
+                            onChange={(e) => updateModule(module.id, { description: e.target.value })}
+                            placeholder="Descrição do módulo (opcional)"
+                            rows={2}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => moveModule(module.id, 'up')}
+                            disabled={moduleIdx === 0}
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => moveModule(module.id, 'down')}
+                            disabled={moduleIdx === formData.content.modules.length - 1}
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => duplicateModule(module.id)}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteModule(module.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <Accordion type="single" collapsible>
+                        <AccordionItem value="lessons">
+                          <AccordionTrigger>
+                            {module.lessons.length} aulas
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2">
+                              {/* Add Lesson Buttons */}
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => addLesson(module.id, 'video')}
+                                >
+                                  <Video className="mr-2 h-4 w-4" />
+                                  + Vídeo
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => addLesson(module.id, 'text')}
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  + Texto
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => addLesson(module.id, 'pdf')}
+                                >
+                                  <File className="mr-2 h-4 w-4" />
+                                  + PDF
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => addLesson(module.id, 'quiz')}
+                                >
+                                  <HelpCircle className="mr-2 h-4 w-4" />
+                                  + Quiz
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => addLesson(module.id, 'download')}
+                                >
+                                  <Download className="mr-2 h-4 w-4" />
+                                  + Anexo
+                                </Button>
+                              </div>
+
+                              {/* Lessons List */}
+                              {module.lessons.map((lesson, lessonIdx) => (
+                                <Card key={lesson.id} className="p-3">
+                                  <div className="flex items-start gap-3">
+                                    <div className="mt-1">
+                                      {getLessonIcon(lesson.type)}
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                      <Input
+                                        value={lesson.title}
+                                        onChange={(e) => updateLesson(module.id, lesson.id, {
+                                          title: e.target.value
+                                        })}
+                                        placeholder="Título da aula"
+                                        className="font-medium"
+                                      />
+                                      <Textarea
+                                        value={lesson.description}
+                                        onChange={(e) => updateLesson(module.id, lesson.id, {
+                                          description: e.target.value
+                                        })}
+                                        placeholder="Descrição da aula"
+                                        rows={2}
+                                        className="text-sm"
+                                      />
+
+                                      {/* Content based on type */}
+                                      {lesson.type === 'video' && (
+                                        <Input
+                                          value={lesson.url || ''}
+                                          onChange={(e) => updateLesson(module.id, lesson.id, {
+                                            url: e.target.value
+                                          })}
+                                          placeholder="URL do vídeo (YouTube, Vimeo, etc)"
+                                        />
+                                      )}
+
+                                      {lesson.type === 'text' && (
+                                        <Textarea
+                                          value={lesson.content || ''}
+                                          onChange={(e) => updateLesson(module.id, lesson.id, {
+                                            content: e.target.value
+                                          })}
+                                          placeholder="Conteúdo da aula (suporta HTML)"
+                                          rows={5}
+                                        />
+                                      )}
+
+                                      {lesson.type === 'pdf' && (
+                                        <Input
+                                          value={lesson.url || ''}
+                                          onChange={(e) => updateLesson(module.id, lesson.id, {
+                                            url: e.target.value
+                                          })}
+                                          placeholder="URL do PDF"
+                                        />
+                                      )}
+
+                                      {lesson.type === 'quiz' && (
+                                        <div className="space-y-2">
+                                          <p className="text-sm text-muted-foreground">
+                                            Quiz: Configure as perguntas após salvar o produto
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {lesson.type === 'download' && (
+                                        <div className="space-y-2">
+                                          <Input
+                                            value={lesson.url || ''}
+                                            onChange={(e) => updateLesson(module.id, lesson.id, {
+                                              url: e.target.value
+                                            })}
+                                            placeholder="URL do arquivo para download"
+                                          />
+                                          <Input
+                                            placeholder="Nome do arquivo"
+                                          />
+                                        </div>
+                                      )}
+
+                                      <div className="flex items-center gap-4">
+                                        <Input
+                                          value={lesson.duration || ''}
+                                          onChange={(e) => updateLesson(module.id, lesson.id, {
+                                            duration: e.target.value
+                                          })}
+                                          placeholder="Duração"
+                                          className="w-32"
+                                        />
+                                        <Badge variant="outline">
+                                          {getLessonTypeName(lesson.type)}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => moveLesson(module.id, lesson.id, 'up')}
+                                        disabled={lessonIdx === 0}
+                                      >
+                                        <ChevronUp className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => moveLesson(module.id, lesson.id, 'down')}
+                                        disabled={lessonIdx === module.lessons.length - 1}
+                                      >
+                                        <ChevronDown className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => deleteLesson(module.id, lesson.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </Card>
+                  ))}
+
+                  {formData.content.modules.length === 0 && (
+                    <div className="text-center py-12">
+                      <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">
+                        Nenhum módulo adicionado ainda
+                      </p>
+                      <Button onClick={addModule} className="mt-4">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Adicionar Primeiro Módulo
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">Salvar</Button>
+              <Button onClick={handleSubmit} className="gradient-primary">
+                <Save className="mr-2 h-4 w-4" />
+                {editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
+              </Button>
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
