@@ -144,16 +144,16 @@ export default function AdminRelatorios() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="lg:pl-64">
         <TopBar breadcrumbs={[
           { label: t('admin.dashboard'), href: '/admin' },
           { label: t('admin.reports') }
         ]} />
         
-        <main className="flex-1 overflow-auto p-6">
+        <main className="p-6">
           <div className="space-y-8">
             <div className="flex items-center gap-4">
               <Button

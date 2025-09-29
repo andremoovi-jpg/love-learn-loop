@@ -206,16 +206,16 @@ export default function AdminUpsells() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="lg:pl-64">
         <TopBar breadcrumbs={[
           { label: t('admin.dashboard'), href: '/admin' },
           { label: t('admin.upsells') }
         ]} />
         
-        <main className="flex-1 overflow-auto p-6">
+        <main className="p-6">
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <Button
@@ -322,94 +322,94 @@ export default function AdminUpsells() {
             </div>
           )}
         </Card>
-      </div>
-
-      {/* Dialog Upsell */}
-      <Dialog open={upsellDialog} onOpenChange={setUpsellDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogTitle>{editingUpsell ? 'Editar' : 'Novo'} Upsell</DialogTitle>
-
-          <form onSubmit={saveUpsell} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Título</label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Descrição</label>
-              <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Produto Pai</label>
-                <Select value={parentId} onValueChange={setParentId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                  <SelectContent>
-                    {products.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Produto Upsell</label>
-                <Select value={upsellId} onValueChange={setUpsellId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                  <SelectContent>
-                    {products.filter(p => p.id !== parentId).map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Preço (R$)</label>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  value={price} 
-                  onChange={(e) => setPrice(e.target.value)} 
-                  required 
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Desconto (%)</label>
-                <Input 
-                  type="number" 
-                  min="0" 
-                  max="100" 
-                  value={discount} 
-                  onChange={(e) => setDiscount(e.target.value)} 
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">URL Checkout (CartPanda)</label>
-              <Input 
-                type="url" 
-                value={checkoutUrl} 
-                onChange={(e) => setCheckoutUrl(e.target.value)}
-                placeholder="https://checkout.cartpanda.com/..."
-              />
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => setUpsellDialog(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">Salvar</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+        </div>
         </main>
+
+        {/* Dialog Upsell */}
+        <Dialog open={upsellDialog} onOpenChange={setUpsellDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogTitle>{editingUpsell ? 'Editar' : 'Novo'} Upsell</DialogTitle>
+
+            <form onSubmit={saveUpsell} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Título</label>
+                <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Descrição</label>
+                <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Produto Pai</label>
+                  <Select value={parentId} onValueChange={setParentId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      {products.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Produto Upsell</label>
+                  <Select value={upsellId} onValueChange={setUpsellId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      {products.filter(p => p.id !== parentId).map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Preço (R$)</label>
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    value={price} 
+                    onChange={(e) => setPrice(e.target.value)} 
+                    required 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Desconto (%)</label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    max="100" 
+                    value={discount} 
+                    onChange={(e) => setDiscount(e.target.value)} 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">URL Checkout (CartPanda)</label>
+                <Input 
+                  type="url" 
+                  value={checkoutUrl} 
+                  onChange={(e) => setCheckoutUrl(e.target.value)}
+                  placeholder="https://checkout.cartpanda.com/..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-4">
+                <Button type="button" variant="outline" onClick={() => setUpsellDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Salvar</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

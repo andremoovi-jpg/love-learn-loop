@@ -94,13 +94,13 @@ const AdminWebhooks = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="lg:pl-64">
         <TopBar />
         
-        <main className="flex-1 overflow-auto p-6">
+        <main className="p-6">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
@@ -235,57 +235,57 @@ const AdminWebhooks = () => {
             </Card>
           </div>
         </main>
-      </div>
-
-      {/* Payload Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Webhook className="h-5 w-5" />
-              Webhook Payload - {selectedLog?.event_type}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedLog && (
-            <div className="space-y-4">
-              {/* Metadata */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-                <div>
-                  <strong>ID:</strong> {selectedLog.id}
-                </div>
-                <div>
-                  <strong>Status:</strong> {getStatusBadge(selectedLog)}
-                </div>
-                <div>
-                  <strong>Criado:</strong> {formatDate(selectedLog.created_at)}
-                </div>
-                <div>
-                  <strong>Atualizado:</strong> {formatDate(selectedLog.updated_at)}
-                </div>
-                {selectedLog.error_message && (
-                  <div className="col-span-2">
-                    <strong>Erro:</strong> 
-                    <div className="text-red-600 mt-1">
-                      {selectedLog.error_message}
-                    </div>
+        
+        {/* Payload Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Webhook className="h-5 w-5" />
+                Webhook Payload - {selectedLog?.event_type}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedLog && (
+              <div className="space-y-4">
+                {/* Metadata */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                  <div>
+                    <strong>ID:</strong> {selectedLog.id}
                   </div>
-                )}
-              </div>
+                  <div>
+                    <strong>Status:</strong> {getStatusBadge(selectedLog)}
+                  </div>
+                  <div>
+                    <strong>Criado:</strong> {formatDate(selectedLog.created_at)}
+                  </div>
+                  <div>
+                    <strong>Atualizado:</strong> {formatDate(selectedLog.updated_at)}
+                  </div>
+                  {selectedLog.error_message && (
+                    <div className="col-span-2">
+                      <strong>Erro:</strong> 
+                      <div className="text-red-600 mt-1">
+                        {selectedLog.error_message}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-              {/* Payload */}
-              <div>
-                <strong className="block mb-2">Payload JSON:</strong>
-                <ScrollArea className="h-96 w-full border rounded-md">
-                  <pre className="p-4 text-sm">
-                    {JSON.stringify(selectedLog.payload, null, 2)}
-                  </pre>
-                </ScrollArea>
+                {/* Payload */}
+                <div>
+                  <strong className="block mb-2">Payload JSON:</strong>
+                  <ScrollArea className="h-96 w-full border rounded-md">
+                    <pre className="p-4 text-sm">
+                      {JSON.stringify(selectedLog.payload, null, 2)}
+                    </pre>
+                  </ScrollArea>
+                </div>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
