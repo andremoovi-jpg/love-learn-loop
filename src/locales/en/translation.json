@@ -1,0 +1,187 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "logout": "Logout",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "search": "Search",
+    "filter": "Filter",
+    "actions": "Actions",
+    "viewDetails": "View Details",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+
+  "auth": {
+    "login": "Login",
+    "register": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "loginSuccess": "Login successful!",
+    "registerSuccess": "Registration successful!",
+    "loginError": "Login error",
+    "registerError": "Registration error",
+    "invalidEmail": "Invalid email",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsDontMatch": "Passwords don't match"
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "myProducts": "My Products",
+    "totalPoints": "Total Points",
+    "activeProducts": "Active Products",
+    "recentActivity": "Recent Activity",
+    "continueLearning": "Continue Learning",
+    "progress": "Progress",
+    "viewAll": "View All",
+    "quickActions": "Quick Actions",
+    "statistics": "Statistics",
+    "welcome": "Welcome back, {{name}}!"
+  },
+
+  "products": {
+    "title": "Products",
+    "myProducts": "My Products",
+    "availableProducts": "Available Products",
+    "productDetails": "Product Details",
+    "modules": "Modules",
+    "lessons": "Lessons",
+    "duration": "Duration",
+    "instructor": "Instructor",
+    "description": "Description",
+    "startCourse": "Start Course",
+    "continueCourse": "Continue Course",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "notStarted": "Not Started",
+    "certificate": "Certificate",
+    "downloadCertificate": "Download Certificate",
+    "noProducts": "You don't have any products yet",
+    "buyNow": "Buy Now"
+  },
+
+  "community": {
+    "title": "Community",
+    "createPost": "Create Post",
+    "writePost": "Write a post...",
+    "publish": "Publish",
+    "likes": "Likes",
+    "comments": "Comments",
+    "share": "Share",
+    "reply": "Reply",
+    "noPostsYet": "No posts yet",
+    "beFirst": "Be the first to post!",
+    "recentPosts": "Recent Posts",
+    "trending": "Trending",
+    "following": "Following"
+  },
+
+  "offers": {
+    "title": "Exclusive Offers",
+    "subtitle": "Products specially selected for you",
+    "discount": "{{percentage}}% off",
+    "originalPrice": "From {{price}}",
+    "specialPrice": "Only {{price}}",
+    "buyNow": "Buy Now",
+    "limitedTime": "Limited Time",
+    "exclusive": "Exclusive",
+    "bestSeller": "Best Seller",
+    "noOffers": "You're all set!",
+    "noOffersDescription": "There are no offers available at the moment. New exclusive offers will appear here soon.",
+    "viewDetails": "View Details"
+  },
+
+  "achievements": {
+    "title": "Achievements",
+    "myAchievements": "My Achievements",
+    "points": "Points",
+    "level": "Level",
+    "nextLevel": "Next Level",
+    "unlockedAt": "Unlocked on {{date}}",
+    "locked": "Locked",
+    "progress": "{{current}}/{{total}}",
+    "recentAchievements": "Recent Achievements",
+    "allAchievements": "All Achievements"
+  },
+
+  "admin": {
+    "title": "Admin Panel",
+    "dashboard": "Admin Dashboard",
+    "users": "Users",
+    "products": "Products",
+    "reports": "Reports",
+    "settings": "Settings",
+    "webhooks": "Webhooks",
+    "upsells": "Upsells",
+    "manageUsers": "Manage Users",
+    "manageProducts": "Manage Products",
+    "totalUsers": "Total Users",
+    "activeUsers": "Active Users",
+    "createProduct": "Create Product",
+    "editProduct": "Edit Product"
+  },
+
+  "profile": {
+    "title": "My Profile",
+    "editProfile": "Edit Profile",
+    "personalInfo": "Personal Information",
+    "fullName": "Full Name",
+    "phone": "Phone",
+    "bio": "Bio",
+    "avatar": "Profile Picture",
+    "changeAvatar": "Change Picture",
+    "preferences": "Preferences",
+    "language": "Language",
+    "notifications": "Notifications",
+    "emailNotifications": "Email Notifications",
+    "privacy": "Privacy",
+    "security": "Security",
+    "changePassword": "Change Password"
+  },
+
+  "navigation": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "community": "Community",
+    "offers": "Offers",
+    "achievements": "Achievements",
+    "profile": "Profile",
+    "admin": "Admin",
+    "logout": "Logout",
+    "menu": "Menu",
+    "close": "Close"
+  },
+
+  "errors": {
+    "404": "Page not found",
+    "500": "Internal server error",
+    "403": "Access denied",
+    "401": "Unauthorized",
+    "generic": "Something went wrong",
+    "tryAgain": "Try Again",
+    "goHome": "Go Home"
+  },
+
+  "notifications": {
+    "new": "New notification",
+    "markAsRead": "Mark as read",
+    "markAllAsRead": "Mark all as read",
+    "noNotifications": "No notifications",
+    "viewAll": "View All"
+  }
+}

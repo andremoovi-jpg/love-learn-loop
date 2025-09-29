@@ -1,0 +1,187 @@
+{
+  "common": {
+    "welcome": "Bienvenido",
+    "logout": "Cerrar Sesión",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "actions": "Acciones",
+    "viewDetails": "Ver Detalles",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No"
+  },
+
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "fullName": "Nombre Completo",
+    "confirmPassword": "Confirmar Contraseña",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "alreadyHaveAccount": "¿Ya tiene una cuenta?",
+    "dontHaveAccount": "¿No tiene una cuenta?",
+    "loginSuccess": "¡Inicio de sesión exitoso!",
+    "registerSuccess": "¡Registro exitoso!",
+    "loginError": "Error al iniciar sesión",
+    "registerError": "Error al registrarse",
+    "invalidEmail": "Correo electrónico inválido",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordsDontMatch": "Las contraseñas no coinciden"
+  },
+
+  "dashboard": {
+    "title": "Panel de Control",
+    "myProducts": "Mis Productos",
+    "totalPoints": "Puntos Totales",
+    "activeProducts": "Productos Activos",
+    "recentActivity": "Actividad Reciente",
+    "continueLearning": "Continuar Aprendiendo",
+    "progress": "Progreso",
+    "viewAll": "Ver Todo",
+    "quickActions": "Acciones Rápidas",
+    "statistics": "Estadísticas",
+    "welcome": "¡Bienvenido de nuevo, {{name}}!"
+  },
+
+  "products": {
+    "title": "Productos",
+    "myProducts": "Mis Productos",
+    "availableProducts": "Productos Disponibles",
+    "productDetails": "Detalles del Producto",
+    "modules": "Módulos",
+    "lessons": "Lecciones",
+    "duration": "Duración",
+    "instructor": "Instructor",
+    "description": "Descripción",
+    "startCourse": "Iniciar Curso",
+    "continueCourse": "Continuar Curso",
+    "completed": "Completado",
+    "inProgress": "En Progreso",
+    "notStarted": "No Iniciado",
+    "certificate": "Certificado",
+    "downloadCertificate": "Descargar Certificado",
+    "noProducts": "Aún no tienes productos",
+    "buyNow": "Comprar Ahora"
+  },
+
+  "community": {
+    "title": "Comunidad",
+    "createPost": "Crear Publicación",
+    "writePost": "Escribir publicación...",
+    "publish": "Publicar",
+    "likes": "Me Gusta",
+    "comments": "Comentarios",
+    "share": "Compartilhar",
+    "reply": "Responder",
+    "noPostsYet": "Aún no hay publicaciones",
+    "beFirst": "¡Sé el primero en publicar!",
+    "recentPosts": "Publicaciones Recientes",
+    "trending": "Tendencias",
+    "following": "Siguiendo"
+  },
+
+  "offers": {
+    "title": "Ofertas Exclusivas",
+    "subtitle": "Productos especialmente seleccionados para ti",
+    "discount": "{{percentage}}% de descuento",
+    "originalPrice": "De {{price}}",
+    "specialPrice": "Solo {{price}}",
+    "buyNow": "Comprar Ahora",
+    "limitedTime": "Tiempo Limitado",
+    "exclusive": "Exclusivo",
+    "bestSeller": "Más Vendido",
+    "noOffers": "¡Estás al día!",
+    "noOffersDescription": "No hay ofertas disponibles en este momento. Nuevas ofertas exclusivas aparecerán aquí pronto.",
+    "viewDetails": "Ver Detalles"
+  },
+
+  "achievements": {
+    "title": "Logros",
+    "myAchievements": "Mis Logros",
+    "points": "Puntos",
+    "level": "Nivel",
+    "nextLevel": "Próximo Nivel",
+    "unlockedAt": "Desbloqueado el {{date}}",
+    "locked": "Bloqueado",
+    "progress": "{{current}}/{{total}}",
+    "recentAchievements": "Logros Recientes",
+    "allAchievements": "Todos los Logros"
+  },
+
+  "admin": {
+    "title": "Panel Administrativo",
+    "dashboard": "Panel Admin",
+    "users": "Usuarios",
+    "products": "Productos",
+    "reports": "Informes",
+    "settings": "Configuración",
+    "webhooks": "Webhooks",
+    "upsells": "Ventas Adicionales",
+    "manageUsers": "Gestionar Usuarios",
+    "manageProducts": "Gestionar Productos",
+    "totalUsers": "Total de Usuarios",
+    "activeUsers": "Usuarios Activos",
+    "createProduct": "Crear Producto",
+    "editProduct": "Editar Producto"
+  },
+
+  "profile": {
+    "title": "Mi Perfil",
+    "editProfile": "Editar Perfil",
+    "personalInfo": "Información Personal",
+    "fullName": "Nombre Completo",
+    "phone": "Teléfono",
+    "bio": "Biografía",
+    "avatar": "Foto de Perfil",
+    "changeAvatar": "Cambiar Foto",
+    "preferences": "Preferencias",
+    "language": "Idioma",
+    "notifications": "Notificaciones",
+    "emailNotifications": "Notificaciones por Correo",
+    "privacy": "Privacidad",
+    "security": "Seguridad",
+    "changePassword": "Cambiar Contraseña"
+  },
+
+  "navigation": {
+    "dashboard": "Panel",
+    "products": "Productos",
+    "community": "Comunidad",
+    "offers": "Ofertas",
+    "achievements": "Logros",
+    "profile": "Perfil",
+    "admin": "Admin",
+    "logout": "Salir",
+    "menu": "Menú",
+    "close": "Cerrar"
+  },
+
+  "errors": {
+    "404": "Página no encontrada",
+    "500": "Error interno del servidor",
+    "403": "Acceso denegado",
+    "401": "No autorizado",
+    "generic": "Algo salió mal",
+    "tryAgain": "Intentar de Nuevo",
+    "goHome": "Ir al Inicio"
+  },
+
+  "notifications": {
+    "new": "Nueva notificación",
+    "markAsRead": "Marcar como leída",
+    "markAllAsRead": "Marcar todas como leídas",
+    "noNotifications": "Sin notificaciones",
+    "viewAll": "Ver Todas"
+  }
+}

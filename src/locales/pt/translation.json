@@ -1,0 +1,187 @@
+{
+  "common": {
+    "welcome": "Bem-vindo",
+    "logout": "Sair",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "actions": "Ações",
+    "viewDetails": "Ver Detalhes",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "yes": "Sim",
+    "no": "Não"
+  },
+
+  "auth": {
+    "login": "Entrar",
+    "register": "Cadastrar",
+    "email": "E-mail",
+    "password": "Senha",
+    "fullName": "Nome Completo",
+    "confirmPassword": "Confirmar Senha",
+    "forgotPassword": "Esqueceu a senha?",
+    "alreadyHaveAccount": "Já tem uma conta?",
+    "dontHaveAccount": "Não tem uma conta?",
+    "loginSuccess": "Login realizado com sucesso!",
+    "registerSuccess": "Cadastro realizado com sucesso!",
+    "loginError": "Erro ao fazer login",
+    "registerError": "Erro ao cadastrar",
+    "invalidEmail": "E-mail inválido",
+    "passwordTooShort": "Senha deve ter pelo menos 6 caracteres",
+    "passwordsDontMatch": "As senhas não coincidem"
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "myProducts": "Meus Produtos",
+    "totalPoints": "Pontos Totais",
+    "activeProducts": "Produtos Ativos",
+    "recentActivity": "Atividade Recente",
+    "continueLearning": "Continue Aprendendo",
+    "progress": "Progresso",
+    "viewAll": "Ver Todos",
+    "quickActions": "Ações Rápidas",
+    "statistics": "Estatísticas",
+    "welcome": "Bem-vindo de volta, {{name}}!"
+  },
+
+  "products": {
+    "title": "Produtos",
+    "myProducts": "Meus Produtos",
+    "availableProducts": "Produtos Disponíveis",
+    "productDetails": "Detalhes do Produto",
+    "modules": "Módulos",
+    "lessons": "Aulas",
+    "duration": "Duração",
+    "instructor": "Instrutor",
+    "description": "Descrição",
+    "startCourse": "Iniciar Curso",
+    "continueCourse": "Continuar Curso",
+    "completed": "Concluído",
+    "inProgress": "Em Progresso",
+    "notStarted": "Não Iniciado",
+    "certificate": "Certificado",
+    "downloadCertificate": "Baixar Certificado",
+    "noProducts": "Você ainda não tem produtos",
+    "buyNow": "Comprar Agora"
+  },
+
+  "community": {
+    "title": "Comunidade",
+    "createPost": "Criar Publicação",
+    "writePost": "Escrever publicação...",
+    "publish": "Publicar",
+    "likes": "Curtidas",
+    "comments": "Comentários",
+    "share": "Compartilhar",
+    "reply": "Responder",
+    "noPostsYet": "Nenhuma publicação ainda",
+    "beFirst": "Seja o primeiro a publicar!",
+    "recentPosts": "Publicações Recentes",
+    "trending": "Em Alta",
+    "following": "Seguindo"
+  },
+
+  "offers": {
+    "title": "Ofertas Exclusivas",
+    "subtitle": "Produtos selecionados especialmente para você",
+    "discount": "{{percentage}}% de desconto",
+    "originalPrice": "De {{price}}",
+    "specialPrice": "Por apenas {{price}}",
+    "buyNow": "Comprar Agora",
+    "limitedTime": "Tempo Limitado",
+    "exclusive": "Exclusivo",
+    "bestSeller": "Mais Vendido",
+    "noOffers": "Você está em dia!",
+    "noOffersDescription": "No momento não há ofertas disponíveis para você. Novas ofertas exclusivas aparecerão aqui em breve.",
+    "viewDetails": "Ver Detalhes"
+  },
+
+  "achievements": {
+    "title": "Conquistas",
+    "myAchievements": "Minhas Conquistas",
+    "points": "Pontos",
+    "level": "Nível",
+    "nextLevel": "Próximo Nível",
+    "unlockedAt": "Desbloqueado em {{date}}",
+    "locked": "Bloqueado",
+    "progress": "{{current}}/{{total}}",
+    "recentAchievements": "Conquistas Recentes",
+    "allAchievements": "Todas as Conquistas"
+  },
+
+  "admin": {
+    "title": "Painel Administrativo",
+    "dashboard": "Dashboard Admin",
+    "users": "Usuários",
+    "products": "Produtos",
+    "reports": "Relatórios",
+    "settings": "Configurações",
+    "webhooks": "Webhooks",
+    "upsells": "Upsells",
+    "manageUsers": "Gerenciar Usuários",
+    "manageProducts": "Gerenciar Produtos",
+    "totalUsers": "Total de Usuários",
+    "activeUsers": "Usuários Ativos",
+    "createProduct": "Criar Produto",
+    "editProduct": "Editar Produto"
+  },
+
+  "profile": {
+    "title": "Meu Perfil",
+    "editProfile": "Editar Perfil",
+    "personalInfo": "Informações Pessoais",
+    "fullName": "Nome Completo",
+    "phone": "Telefone",
+    "bio": "Biografia",
+    "avatar": "Foto de Perfil",
+    "changeAvatar": "Alterar Foto",
+    "preferences": "Preferências",
+    "language": "Idioma",
+    "notifications": "Notificações",
+    "emailNotifications": "Notificações por E-mail",
+    "privacy": "Privacidade",
+    "security": "Segurança",
+    "changePassword": "Alterar Senha"
+  },
+
+  "navigation": {
+    "dashboard": "Dashboard",
+    "products": "Produtos",
+    "community": "Comunidade",
+    "offers": "Ofertas",
+    "achievements": "Conquistas",
+    "profile": "Perfil",
+    "admin": "Admin",
+    "logout": "Sair",
+    "menu": "Menu",
+    "close": "Fechar"
+  },
+
+  "errors": {
+    "404": "Página não encontrada",
+    "500": "Erro interno do servidor",
+    "403": "Acesso negado",
+    "401": "Não autorizado",
+    "generic": "Algo deu errado",
+    "tryAgain": "Tentar Novamente",
+    "goHome": "Ir para Home"
+  },
+
+  "notifications": {
+    "new": "Nova notificação",
+    "markAsRead": "Marcar como lida",
+    "markAllAsRead": "Marcar todas como lidas",
+    "noNotifications": "Sem notificações",
+    "viewAll": "Ver Todas"
+  }
+}
