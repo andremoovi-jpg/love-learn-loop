@@ -98,7 +98,8 @@ export default function AdminUsuarios() {
 
       if (error) {
         console.error('❌ Erro ao buscar usuários:', error);
-        throw error;
+        toast.error(`Erro ao carregar usuários: ${error.message || 'Erro desconhecido'}`);
+        return;
       }
 
       if (!data || data.length === 0) {
@@ -114,7 +115,7 @@ export default function AdminUsuarios() {
       }));
 
       console.log('✅ Usuários carregados com emails reais:', usersWithStatus.length);
-      console.log('📧 Exemplo:', usersWithStatus[0]?.email);
+      console.log('📧 Primeiro email:', usersWithStatus[0]?.email);
       setUsers(usersWithStatus);
 
     } catch (error: any) {
