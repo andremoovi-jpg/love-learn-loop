@@ -140,6 +140,20 @@ export default function AdminProdutos() {
     e.preventDefault();
     
     try {
+      // Ensure we have proper content structure
+      const contentData = modules.length > 0 
+        ? { modules } 
+        : {
+            modules: [{
+              title: 'Módulo 1 - Introdução',
+              lessons: [{
+                title: 'Aula 1 - Bem-vindo',
+                type: 'video' as const,
+                url: ''
+              }]
+            }]
+          };
+
       const productData = {
         name,
         slug,
@@ -147,7 +161,9 @@ export default function AdminProdutos() {
         cartpanda_product_id: cartpandaId,
         product_type: type,
         cover_image_url: coverImage,
-        content: JSON.stringify({ modules }),
+        level: 'beginner', // Default level
+        estimated_duration: '1 hora', // Default duration
+        content: contentData as any, // Save as JSONB, not stringified
         is_active: true
       };
 
