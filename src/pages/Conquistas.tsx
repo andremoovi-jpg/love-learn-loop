@@ -6,6 +6,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, Trophy, Loader2 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface Achievement {
   id: string;
@@ -18,6 +19,7 @@ interface Achievement {
 
 export default function Conquistas() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [unlockedAchievements, setUnlockedAchievements] = useState<Achievement[]>([]);
   const [lockedAchievements, setLockedAchievements] = useState<Achievement[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
@@ -104,8 +106,8 @@ export default function Conquistas() {
       <div className="lg:pl-64">
         <TopBar 
           breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Conquistas" }
+            { label: t('navigation.dashboard'), href: "/dashboard" },
+            { label: t('navigation.achievements') }
           ]}
         />
 
@@ -117,10 +119,10 @@ export default function Conquistas() {
                 <Trophy className="h-8 w-8 text-warning" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-foreground">Suas Conquistas</h1>
+                <h1 className="text-4xl font-bold text-foreground">{t('achievements.title')}</h1>
                 <div className="flex items-center justify-center gap-2 mt-2">
                   <Star className="text-warning fill-current" />
-                  <span className="text-2xl font-bold text-foreground">{totalPoints} pontos</span>
+                  <span className="text-2xl font-bold text-foreground">{totalPoints} {t('achievements.points')}</span>
                 </div>
               </div>
             </div>

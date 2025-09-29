@@ -11,6 +11,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 interface UserProduct {
   id: string;
@@ -30,6 +31,7 @@ interface UserProduct {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -81,9 +83,9 @@ export default function Dashboard() {
       
       <div className="lg:pl-64">
         <TopBar 
-          title="Dashboard"
+          title={t('dashboard.title')}
           breadcrumbs={[
-            { label: "Dashboard" }
+            { label: t('navigation.dashboard') }
           ]}
         />
 
@@ -91,33 +93,33 @@ export default function Dashboard() {
           {/* Welcome Section */}
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-foreground">
-              Bem-vindo de volta, {user?.full_name?.split(' ')[0]}! 👋
+              {t('dashboard.welcome', { name: user?.full_name?.split(' ')[0] || '' })} 👋
             </h1>
             <p className="text-muted-foreground">
-              Aqui está seu resumo de atividades e próximos passos.
+              {t('dashboard.continueLearning')}
             </p>
           </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
-              title="Produtos Ativos"
+              title={t('dashboard.activeProducts')}
               value={userProducts.length}
               icon={Package}
             />
             <StatCard
-              title="Progresso Médio"
+              title={t('dashboard.progress')}
               value={`${avgProgress}%`}
               icon={TrendingUp}
               gradient
             />
             <StatCard
-              title="Conquistas"
+              title={t('achievements.title')}
               value="0"
               icon={Trophy}
             />
             <StatCard
-              title="Pontos Totais"
+              title={t('dashboard.totalPoints')}
               value={profile?.total_points || 0}
               icon={Star}
             />
@@ -130,10 +132,10 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Play className="h-5 w-5 text-primary" />
-                    <span>Continue Aprendendo</span>
+                    <span>{t('dashboard.continueLearning')}</span>
                   </CardTitle>
                   <CardDescription>
-                    Retome seus estudos de onde parou
+                    {t('dashboard.recentActivity')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -155,13 +157,13 @@ export default function Dashboard() {
                       </div>
                       <Button asChild size="sm" className="gradient-primary">
                         <Link to={`/produto/${lastProduct.product.slug}`}>
-                          Continuar
+                          {t('dashboard.continueLearning')}
                         </Link>
                       </Button>
                     </div>
                   ) : (
                     <p className="text-center text-muted-foreground py-8">
-                      Nenhum produto em andamento
+                      {t('products.noProducts')}
                     </p>
                   )}
                 </CardContent>
@@ -170,9 +172,9 @@ export default function Dashboard() {
               {/* My Products */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Meus Produtos</h2>
+                  <h2 className="text-xl font-semibold">{t('dashboard.myProducts')}</h2>
                   <Button asChild variant="outline">
-                    <Link to="/meus-produtos">Ver todos</Link>
+                    <Link to="/meus-produtos">{t('dashboard.viewAll')}</Link>
                   </Button>
                 </div>
                 
@@ -191,7 +193,7 @@ export default function Dashboard() {
                   ))}
                   {userProducts.length === 0 && (
                     <p className="text-center text-muted-foreground py-8 col-span-2">
-                      Nenhum produto adquirido ainda
+                      {t('products.noProducts')}
                     </p>
                   )}
                 </div>
@@ -205,7 +207,7 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Clock className="h-5 w-5 text-primary" />
-                    <span>Atividade Recente</span>
+                    <span>{t('dashboard.recentActivity')}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -234,25 +236,25 @@ export default function Dashboard() {
               {/* Quick Actions */}
               <Card className="shadow-soft border-border/50">
                 <CardHeader>
-                  <CardTitle>Ações Rápidas</CardTitle>
+                  <CardTitle>{t('dashboard.quickActions')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Button asChild className="w-full justify-start" variant="outline">
                     <Link to="/ofertas">
                       <Trophy className="mr-2 h-4 w-4" />
-                      Ver Ofertas Especiais
+                      {t('offers.title')}
                     </Link>
                   </Button>
                   <Button asChild className="w-full justify-start" variant="outline">
                     <Link to="/comunidade">
                       <Users className="mr-2 h-4 w-4" />
-                      Acessar Comunidade
+                      {t('community.title')}
                     </Link>
                   </Button>
                   <Button asChild className="w-full justify-start" variant="outline">
                     <Link to="/conquistas">
                       <Trophy className="mr-2 h-4 w-4" />
-                      Ver Conquistas
+                      {t('achievements.title')}
                     </Link>
                   </Button>
                 </CardContent>

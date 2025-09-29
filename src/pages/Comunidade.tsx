@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useTranslation } from 'react-i18next';
 
 interface Post {
   id: string;
@@ -30,6 +31,7 @@ interface Post {
 
 export default function Comunidade() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function Comunidade() {
       setPosts(postsWithData);
     } catch (error) {
       console.error('Erro ao carregar posts:', error);
-      toast.error('Erro ao carregar comunidade');
+      toast.error(t('community.errors.loadError'));
     } finally {
       setLoading(false);
     }
@@ -103,7 +105,7 @@ export default function Comunidade() {
 
   const createPost = async () => {
     if (!newPost.trim()) {
-      toast.error('Escreva algo para postar');
+      toast.error(t('community.errors.emptyPost'));
       return;
     }
 
@@ -119,13 +121,13 @@ export default function Comunidade() {
 
       if (error) throw error;
 
-      toast.success('Post criado!');
+      toast.success(t('community.success.postCreated'));
       setNewPost("");
       setDialogOpen(false);
       loadPosts();
     } catch (error) {
       console.error('Erro ao criar post:', error);
-      toast.error('Erro ao criar post');
+      toast.error(t('community.errors.createError'));
     }
   };
 
@@ -156,7 +158,7 @@ export default function Comunidade() {
       loadPosts();
     } catch (error) {
       console.error('Erro ao curtir:', error);
-      toast.error('Erro ao curtir post');
+      toast.error(t('community.errors.likeError'));
     }
   };
 
@@ -166,8 +168,8 @@ export default function Comunidade() {
 
       <div className="lg:pl-64">
         <TopBar
-          title="Comunidade"
-          breadcrumbs={[{ label: "Comunidade" }]}
+          title={t('community.title')}
+          breadcrumbs={[{ label: t('navigation.community') }]}
         />
 
         <main className="p-6">
@@ -175,9 +177,9 @@ export default function Comunidade() {
             {/* Header */}
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl font-bold mb-2">Comunidade MemberLovs</h1>
+                <h1 className="text-4xl font-bold mb-2">{t('community.title')}</h1>
                 <p className="text-muted-foreground">
-                  Compartilhe experiências e conecte-se com outros membros
+                  {t('community.subtitle')}
                 </p>
               </div>
 
@@ -185,23 +187,23 @@ export default function Comunidade() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Novo Post
+                    {t('community.newPost')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogTitle>Criar Post</DialogTitle>
+                  <DialogTitle>{t('community.createPost')}</DialogTitle>
                   <Textarea
-                    placeholder="O que você quer compartilhar?"
+                    placeholder={t('community.postPlaceholder')}
                     value={newPost}
                     onChange={(e) => setNewPost(e.target.value)}
                     rows={5}
                   />
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                      Cancelar
+                      {t('community.cancel')}
                     </Button>
                     <Button onClick={createPost}>
-                      Publicar
+                      {t('community.publish')}
                     </Button>
                   </div>
                 </DialogContent>
@@ -211,11 +213,11 @@ export default function Comunidade() {
             {/* Posts */}
             <div className="space-y-6">
               {loading ? (
-                <p className="text-center text-muted-foreground">Carregando...</p>
+                <p className="text-center text-muted-foreground">{t('common.loading')}</p>
               ) : posts.length === 0 ? (
                 <Card className="p-12 text-center">
                   <p className="text-muted-foreground">
-                    Seja o primeiro a criar um post!
+                    {t('community.beFirst')}
                   </p>
                 </Card>
               ) : (

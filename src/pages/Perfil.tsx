@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { validatePasswordSecurity } from "@/utils/passwordSecurity";
+import { useTranslation } from 'react-i18next';
 
 interface Profile {
   full_name: string;
@@ -22,6 +23,7 @@ interface Profile {
 
 export default function Perfil() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile>({
     full_name: '',
     avatar_url: '',
@@ -82,10 +84,10 @@ export default function Perfil() {
 
       if (error) throw error;
 
-      toast.success('Perfil atualizado com sucesso!');
+      toast.success(t('profilePage.success.profileUpdated'));
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Erro ao atualizar perfil');
+      toast.error(t('profilePage.errors.updateProfile'));
     } finally {
       setSaving(false);
     }
@@ -95,7 +97,7 @@ export default function Perfil() {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error('As senhas não coincidem');
+      toast.error(t('profilePage.errors.passwordsDontMatch'));
       return;
     }
 
@@ -107,7 +109,7 @@ export default function Perfil() {
     }
 
     if (passwordValidation.leaked) {
-      toast.error('Esta senha foi exposta em vazamentos de dados. Por favor, escolha outra.');
+      toast.error(t('profilePage.errors.passwordExposed'));
       return;
     }
 
@@ -119,13 +121,13 @@ export default function Perfil() {
 
       if (error) throw error;
 
-      toast.success('Senha alterada com sucesso!');
+      toast.success(t('profilePage.success.passwordChanged'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
       console.error('Error changing password:', error);
-      toast.error(error.message || 'Erro ao alterar senha');
+      toast.error(error.message || t('profilePage.errors.changePasswordError'));
     } finally {
       setSaving(false);
     }
@@ -136,7 +138,7 @@ export default function Perfil() {
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="lg:pl-64">
-          <TopBar breadcrumbs={[{ label: "Carregando..." }]} />
+          <TopBar breadcrumbs={[{ label: t('common.loading') }]} />
           <main className="p-6">
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -154,17 +156,17 @@ export default function Perfil() {
       <div className="lg:pl-64">
         <TopBar 
           breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Perfil" }
+            { label: t('navigation.dashboard'), href: "/dashboard" },
+            { label: t('navigation.profile') }
           ]}
         />
 
         <main className="p-6 max-w-4xl">
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Perfil</h1>
+              <h1 className="text-3xl font-bold text-foreground">{t('profilePage.title')}</h1>
               <p className="text-muted-foreground">
-                Gerencie suas informações pessoais e configurações de segurança
+                {t('profilePage.subtitle')}
               </p>
             </div>
 
@@ -172,18 +174,18 @@ export default function Perfil() {
               <TabsList>
                 <TabsTrigger value="personal" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Informações
+                  {t('profilePage.personalInfo')}
                 </TabsTrigger>
                 <TabsTrigger value="security" className="flex items-center gap-2">
                   <Lock className="h-4 w-4" />
-                  Segurança
+                  {t('profilePage.security')}
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="personal">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Informações Pessoais</CardTitle>
+                    <CardTitle>{t('profilePage.personalInfo')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={updateProfile} className="space-y-6">
@@ -195,11 +197,11 @@ export default function Perfil() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="space-y-2">
-                          <Label htmlFor="avatar_url">URL da Foto</Label>
+                          <Label htmlFor="avatar_url">{t('profilePage.avatarLabel')}</Label>
                           <Input
                             id="avatar_url"
                             type="url"
-                            placeholder="https://exemplo.com/foto.jpg"
+                            placeholder={t('profilePage.avatarPlaceholder')}
                             value={profile.avatar_url}
                             onChange={(e) => setProfile({...profile, avatar_url: e.target.value})}
                           />
@@ -208,17 +210,17 @@ export default function Perfil() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="fullName">Nome Completo</Label>
+                          <Label htmlFor="fullName">{t('profilePage.fullNameLabel')}</Label>
                           <Input
                             id="fullName"
                             value={profile.full_name}
                             onChange={(e) => setProfile({...profile, full_name: e.target.value})}
-                            placeholder="Seu nome completo"
+                            placeholder={t('profilePage.fullNamePlaceholder')}
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
+                          <Label htmlFor="email">{t('profilePage.emailLabel')}</Label>
                           <Input
                             id="email"
                             value={user?.email || ''}
@@ -228,17 +230,17 @@ export default function Perfil() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Telefone</Label>
+                          <Label htmlFor="phone">{t('profilePage.phoneLabel')}</Label>
                           <Input
                             id="phone"
                             value={profile.phone}
                             onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                            placeholder="(11) 99999-9999"
+                            placeholder={t('profilePage.phonePlaceholder')}
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="points">Pontos Totais</Label>
+                          <Label htmlFor="points">{t('profilePage.pointsLabel')}</Label>
                           <Input
                             id="points"
                             value={profile.total_points}
@@ -252,10 +254,10 @@ export default function Perfil() {
                         {saving ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Salvando...
+                            {t('profilePage.saving')}
                           </>
                         ) : (
-                          'Salvar Alterações'
+                          t('profilePage.saveChanges')
                         )}
                       </Button>
                     </form>
@@ -266,12 +268,12 @@ export default function Perfil() {
               <TabsContent value="security">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Alterar Senha</CardTitle>
+                    <CardTitle>{t('profilePage.changePasswordTitle')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={changePassword} className="space-y-4 max-w-md">
                       <div className="space-y-2">
-                        <Label htmlFor="currentPassword">Senha Atual</Label>
+                        <Label htmlFor="currentPassword">{t('profilePage.currentPassword')}</Label>
                         <Input
                           id="currentPassword"
                           type="password"
@@ -282,7 +284,7 @@ export default function Perfil() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="newPassword">Nova Senha</Label>
+                        <Label htmlFor="newPassword">{t('profilePage.newPassword')}</Label>
                         <Input
                           id="newPassword"
                           type="password"
@@ -294,7 +296,7 @@ export default function Perfil() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                        <Label htmlFor="confirmPassword">{t('profilePage.confirmPassword')}</Label>
                         <Input
                           id="confirmPassword"
                           type="password"
@@ -309,10 +311,10 @@ export default function Perfil() {
                         {saving ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Alterando...
+                            {t('profilePage.changing')}
                           </>
                         ) : (
-                          'Alterar Senha'
+                          t('profilePage.changePasswordButton')
                         )}
                       </Button>
                     </form>

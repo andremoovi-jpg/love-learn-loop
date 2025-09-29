@@ -4,6 +4,7 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User } from "@/types";
+import { useTranslation } from 'react-i18next';
 
 interface AuthContextType {
   user: User | null;
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Load user profile synchronously - NO setTimeout
   const loadUserProfile = async (userId: string) => {
@@ -160,11 +162,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Verifique seu email para confirmar sua conta!');
-    }
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success(t('register.success.verifyEmail'));
+      }
     
     return { error };
   };
@@ -177,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        toast.error('Credenciais inválidas');
+        toast.error(t('login.errors.wrongCredentials'));
         throw error;
       }
 
@@ -191,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      toast.error('Erro ao fazer logout');
+      toast.error(t('auth.loginError'));
     }
   };
 

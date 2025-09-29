@@ -6,6 +6,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ShoppingBag } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface Upsell {
   id: string;
@@ -26,6 +27,7 @@ interface Upsell {
 
 export default function Ofertas() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [upsells, setUpsells] = useState<Upsell[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,12 +81,12 @@ export default function Ofertas() {
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="lg:pl-64">
-          <TopBar 
-            breadcrumbs={[
-              { label: "Dashboard", href: "/dashboard" },
-              { label: "Ofertas" }
-            ]}
-          />
+        <TopBar 
+          breadcrumbs={[
+            { label: t('navigation.dashboard'), href: "/dashboard" },
+            { label: t('navigation.offers') }
+          ]}
+        />
           <main className="p-6">
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -102,8 +104,8 @@ export default function Ofertas() {
       <div className="lg:pl-64">
         <TopBar 
           breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Ofertas" }
+            { label: t('navigation.dashboard'), href: "/dashboard" },
+            { label: t('navigation.offers') }
           ]}
         />
 
@@ -115,9 +117,9 @@ export default function Ofertas() {
                 <ShoppingBag className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Ofertas Exclusivas</h1>
+                <h1 className="text-3xl font-bold text-foreground">{t('offers.title')}</h1>
                 <p className="text-muted-foreground">
-                  Produtos selecionados especialmente para você
+                  {t('offers.subtitle')}
                 </p>
               </div>
             </div>
@@ -131,9 +133,9 @@ export default function Ofertas() {
                   <ShoppingBag className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Você está em dia!</h3>
+                  <h3 className="text-xl font-semibold mb-2">{t('offers.noOffers')}</h3>
                   <p className="text-muted-foreground">
-                    No momento não há ofertas disponíveis para você. Novas ofertas exclusivas aparecerão aqui em breve.
+                    {t('offers.noOffersDescription')}
                   </p>
                 </div>
               </div>

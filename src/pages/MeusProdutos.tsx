@@ -16,6 +16,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProducts } from "@/hooks/useUserProducts";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from 'react-i18next';
 
 interface UserProduct {
   id: string;
@@ -33,22 +34,10 @@ interface UserProduct {
   };
 }
 
-const filterOptions = [
-  { value: "all", label: "Todos os produtos" },
-  { value: "course", label: "Cursos" },
-  { value: "ebook", label: "E-books" },
-  { value: "mentoring", label: "Mentorias" },
-];
-
-const statusOptions = [
-  { value: "all", label: "Todos os status" },
-  { value: "not-started", label: "Não iniciado" },
-  { value: "in-progress", label: "Em progresso" },
-  { value: "completed", label: "Concluído" },
-];
 
 export default function MeusProdutos() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -117,6 +106,20 @@ export default function MeusProdutos() {
 
   const stats = getProgressStats();
 
+  const filterOptions = [
+    { value: "all", label: t('myProducts.filters.all') },
+    { value: "course", label: t('myProducts.filters.courses') },
+    { value: "ebook", label: t('myProducts.filters.ebooks') },
+    { value: "mentoring", label: t('myProducts.filters.mentoring') },
+  ];
+
+  const statusOptions = [
+    { value: "all", label: t('myProducts.filters.allStatus') },
+    { value: "not-started", label: t('myProducts.filters.notStarted') },
+    { value: "in-progress", label: t('myProducts.filters.inProgress') },
+    { value: "completed", label: t('myProducts.filters.completed') },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -124,8 +127,8 @@ export default function MeusProdutos() {
       <div className="lg:pl-64">
         <TopBar 
           breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Meus Produtos" }
+            { label: t('navigation.dashboard'), href: "/dashboard" },
+            { label: t('navigation.myProducts') }
           ]}
         />
 
@@ -133,9 +136,9 @@ export default function MeusProdutos() {
           {/* Header */}
           <div className="space-y-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Meus Produtos</h1>
+              <h1 className="text-3xl font-bold text-foreground">{t('myProducts.title')}</h1>
               <p className="text-muted-foreground">
-                Gerencie e acesse todos os seus produtos adquiridos
+                {t('myProducts.subtitle')}
               </p>
             </div>
 
@@ -143,19 +146,19 @@ export default function MeusProdutos() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-card border border-border rounded-lg text-center">
                 <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-sm text-muted-foreground">{t('myProducts.stats.total')}</p>
               </div>
               <div className="p-4 bg-card border border-border rounded-lg text-center">
                 <p className="text-2xl font-bold text-success">{stats.completed}</p>
-                <p className="text-sm text-muted-foreground">Concluídos</p>
+                <p className="text-sm text-muted-foreground">{t('myProducts.stats.completed')}</p>
               </div>
               <div className="p-4 bg-card border border-border rounded-lg text-center">
                 <p className="text-2xl font-bold text-warning">{stats.inProgress}</p>
-                <p className="text-sm text-muted-foreground">Em Progresso</p>
+                <p className="text-sm text-muted-foreground">{t('myProducts.stats.inProgress')}</p>
               </div>
               <div className="p-4 bg-card border border-border rounded-lg text-center">
                 <p className="text-2xl font-bold text-muted-foreground">{stats.notStarted}</p>
-                <p className="text-sm text-muted-foreground">Não Iniciados</p>
+                <p className="text-sm text-muted-foreground">{t('myProducts.stats.notStarted')}</p>
               </div>
             </div>
           </div>
@@ -165,7 +168,7 @@ export default function MeusProdutos() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar produtos..."
+                placeholder={t('myProducts.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -205,7 +208,7 @@ export default function MeusProdutos() {
           {/* Active Filters */}
           {(typeFilter !== "all" || statusFilter !== "all" || searchTerm) && (
             <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm text-muted-foreground">Filtros ativos:</span>
+              <span className="text-sm text-muted-foreground">{t('myProducts.filters.activeFilters')}</span>
               
               {searchTerm && (
                 <Badge variant="secondary" className="gap-2">
@@ -258,7 +261,7 @@ export default function MeusProdutos() {
                   setStatusFilter("all");
                 }}
               >
-                Limpar filtros
+                {t('myProducts.filters.clearFilters')}
               </Button>
             </div>
           )}
@@ -266,7 +269,7 @@ export default function MeusProdutos() {
           {/* Products Grid */}
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Carregando produtos...</p>
+              <p className="text-lg text-muted-foreground">{t('myProducts.loading')}</p>
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -286,7 +289,7 @@ export default function MeusProdutos() {
           ) : (
             <div className="text-center py-12">
               <p className="text-lg text-muted-foreground mb-4">
-                {userProducts.length === 0 ? "Nenhum produto adquirido ainda" : "Nenhum produto encontrado"}
+                {userProducts.length === 0 ? t('myProducts.noProducts') : t('myProducts.noProductsFound')}
               </p>
               {userProducts.length > 0 && (
                 <Button
@@ -297,7 +300,7 @@ export default function MeusProdutos() {
                     setStatusFilter("all");
                   }}
                 >
-                  Limpar filtros
+                  {t('myProducts.filters.clearFilters')}
                 </Button>
               )}
             </div>

@@ -14,6 +14,7 @@ import { CheckCircle, Play, ArrowLeft, ArrowRight, Loader2, Lock, AlertCircle, B
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import DOMPurify from 'dompurify';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
   id: string;
@@ -59,6 +60,7 @@ interface UserProduct {
 export default function Produto() {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [product, setProduct] = useState<Product | null>(null);
   const [userProduct, setUserProduct] = useState<UserProduct | null>(null);
   const [upsells, setUpsells] = useState<any[]>([]);
@@ -239,7 +241,7 @@ export default function Produto() {
         progress
       });
 
-      toast.success('Aula marcada como concluída!');
+      toast.success(t('productPage.lessonCompleted'));
 
       // Auto avançar para próxima aula
       if (hasNext()) {
@@ -247,7 +249,7 @@ export default function Produto() {
       }
     } catch (error) {
       console.error('Erro ao salvar progresso:', error);
-      toast.error('Erro ao salvar progresso');
+      toast.error(t('productPage.errorSavingProgress'));
     }
   };
 
@@ -302,7 +304,7 @@ export default function Produto() {
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="lg:pl-64">
-          <TopBar breadcrumbs={[{ label: "Carregando..." }]} />
+          <TopBar breadcrumbs={[{ label: t('common.loading') }]} />
           <main className="p-6">
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -319,15 +321,15 @@ export default function Produto() {
       <div className="min-h-screen bg-background">
         <Sidebar />
         <div className="lg:pl-64">
-          <TopBar breadcrumbs={[{ label: "Erro" }]} />
+          <TopBar breadcrumbs={[{ label: t('common.error') }]} />
           <main className="p-6">
             <Card className="max-w-md mx-auto">
               <div className="text-center p-8">
                 <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
-                <h2 className="text-xl font-semibold mb-2">Erro ao carregar produto</h2>
+                <h2 className="text-xl font-semibold mb-2">{t('productPage.error')}</h2>
                 <p className="text-muted-foreground">{error}</p>
                 <Button className="mt-4" onClick={() => window.location.href = '/dashboard'}>
-                  Voltar ao Dashboard
+                  {t('productPage.backToDashboard')}
                 </Button>
               </div>
             </Card>
@@ -349,22 +351,22 @@ export default function Produto() {
         <Sidebar />
         <div className="lg:pl-64">
           <TopBar breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
+            { label: t('navigation.dashboard'), href: "/dashboard" },
             { label: product.name }
           ]} />
           <main className="p-6">
             <Card className="max-w-2xl mx-auto">
               <div className="text-center p-12">
                 <Lock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-2xl font-bold mb-4">Acesso Restrito</h2>
+                <h2 className="text-2xl font-bold mb-4">{t('productPage.restrictedAccess')}</h2>
                 <p className="text-muted-foreground mb-6">
-                  Você não tem acesso a este produto.
+                  {t('productPage.noAccessMessage')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Entre em contato com o suporte para adquirir "{product.name}"
+                  {t('productPage.contactSupport')} "{product.name}"
                 </p>
                 <Button className="mt-6" onClick={() => window.location.href = '/ofertas'}>
-                  Ver Ofertas Disponíveis
+                  {t('productPage.viewOffers')}
                 </Button>
               </div>
             </Card>
@@ -384,20 +386,20 @@ export default function Produto() {
         <Sidebar />
         <div className="lg:pl-64">
           <TopBar breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Meus Produtos", href: "/meus-produtos" },
+            { label: t('navigation.dashboard'), href: "/dashboard" },
+            { label: t('navigation.myProducts'), href: "/meus-produtos" },
             { label: product.name }
           ]} />
           <main className="p-6">
             <Card className="max-w-2xl mx-auto">
               <div className="text-center p-12">
                 <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-2xl font-bold mb-4">Conteúdo em Preparação</h2>
+                <h2 className="text-2xl font-bold mb-4">{t('productPage.inPreparation')}</h2>
                 <p className="text-muted-foreground">
-                  O conteúdo deste produto está sendo preparado e estará disponível em breve.
+                  {t('productPage.inPreparationMessage')}
                 </p>
                 <Button className="mt-6" onClick={() => window.location.href = '/dashboard'}>
-                  Voltar ao Dashboard
+                  {t('productPage.backToDashboard')}
                 </Button>
               </div>
             </Card>
@@ -416,8 +418,8 @@ export default function Produto() {
       <div className="lg:pl-64">
         <TopBar 
           breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Meus Produtos", href: "/meus-produtos" },
+            { label: t('navigation.dashboard'), href: "/dashboard" },
+            { label: t('navigation.myProducts'), href: "/meus-produtos" },
             { label: product.name }
           ]}
         />
@@ -428,10 +430,10 @@ export default function Produto() {
             <aside className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
                 <div>
-                  <h2 className="text-xl font-bold mb-4">Conteúdo</h2>
+                  <h2 className="text-xl font-bold mb-4">{t('productPage.content')}</h2>
                   <Progress value={userProduct.progress} className="mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {userProduct.progress}% concluído
+                    {userProduct.progress}% {t('productPage.completed')}
                   </p>
                 </div>
 
