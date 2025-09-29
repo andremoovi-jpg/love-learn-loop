@@ -57,16 +57,16 @@ export function Sidebar() {
   };
 
   const SidebarContent = () => (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-6 border-b border-sidebar-border">
+      <div className="p-6 border-b border-sidebar-border flex-shrink-0">
         <h1 className="text-2xl font-bold gradient-premium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           {t('sidebar.appName')}
         </h1>
       </div>
 
       {/* User Profile */}
-      <div className="p-6 border-b border-sidebar-border">
+      <div className="p-6 border-b border-sidebar-border flex-shrink-0">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src={user?.avatar_url} />
@@ -85,8 +85,8 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      {/* Navigation - Scrollable */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
         {navigation.map((item) => (
           <NavLink
             key={item.name}
@@ -137,7 +137,7 @@ export function Sidebar() {
       </nav>
 
       {/* Logout Button */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border flex-shrink-0">
         <Button
           variant="ghost"
           onClick={handleLogout}
@@ -147,7 +147,7 @@ export function Sidebar() {
           {t('sidebar.logout')}
         </Button>
       </div>
-    </>
+    </div>
   );
 
   return (
