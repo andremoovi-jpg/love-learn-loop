@@ -128,16 +128,20 @@ export default function ForumTopic() {
         return;
       }
 
-      // Load author profile separately
+      // Load author profile using public function
       const { data: authorData } = await supabase
-        .from("profiles")
-        .select("id, user_id, full_name, avatar_url")
-        .eq("user_id", topicData.author_id)
+        .rpc("get_public_profiles_community")
+        .eq("id", topicData.author_id)
         .single();
 
       setTopic({
         ...topicData,
-        author: authorData || { id: '', user_id: topicData.author_id, full_name: 'Usuário', avatar_url: null }
+        author: authorData ? {
+          id: authorData.id,
+          user_id: topicData.author_id,
+          full_name: authorData.full_name,
+          avatar_url: authorData.avatar_url
+        } : { id: '', user_id: topicData.author_id, full_name: 'Usuário', avatar_url: null }
       } as unknown as Topic);
 
       // Check if user is member
@@ -163,20 +167,28 @@ export default function ForumTopic() {
 
       if (repliesError) throw repliesError;
 
-      // Load authors for all replies
+      // Load authors for all replies using public function
       if (repliesData && repliesData.length > 0) {
-        const authorIds = [...new Set(repliesData.map(r => r.author_id))];
-        const { data: authorsData } = await supabase
-          .from("profiles")
-          .select("id, user_id, full_name, avatar_url")
-          .in("user_id", authorIds);
+        const profileIds = [...new Set(repliesData.map(r => r.author_id))];
+        const { data: publicProfiles } = await supabase
+          .rpc("get_public_profiles_community");
 
-        const authorsMap = new Map(authorsData?.map(a => [a.user_id, a]) || []);
+        const profilesMap = new Map(
+          publicProfiles?.map(p => [p.id, p]) || []
+        );
         
-        const repliesWithAuthors = repliesData.map(reply => ({
-          ...reply,
-          author: authorsMap.get(reply.author_id) || { id: '', user_id: reply.author_id, full_name: 'Usuário', avatar_url: null }
-        }));
+        const repliesWithAuthors = repliesData.map(reply => {
+          const profile = profilesMap.get(reply.author_id);
+          return {
+            ...reply,
+            author: profile ? {
+              id: profile.id,
+              user_id: reply.author_id,
+              full_name: profile.full_name,
+              avatar_url: profile.avatar_url
+            } : { id: '', user_id: reply.author_id, full_name: 'Usuário', avatar_url: null }
+          };
+        });
 
         setReplies(repliesWithAuthors as unknown as Reply[]);
       } else {
@@ -250,16 +262,27 @@ export default function ForumTopic() {
 
       if (error) throw error;
 
-      // Load author profile for new reply
-      const { data: authorData } = await supabase
+      // Load author profile for new reply using public function
+      const { data: publicProfiles } = await supabase
+        .rpc("get_public_profiles_community");
+      
+      // Find profile by user_id (since user.id is the user_id in profiles table)
+      const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, avatar_url")
+        .select("id")
         .eq("user_id", user.id)
         .single();
+      
+      const authorProfile = publicProfiles?.find(p => p.id === profileData?.id);
 
       const newReplyWithAuthor = {
         ...data,
-        author: authorData || { id: '', user_id: user.id, full_name: 'Usuário', avatar_url: null }
+        author: authorProfile ? {
+          id: authorProfile.id,
+          user_id: user.id,
+          full_name: authorProfile.full_name,
+          avatar_url: authorProfile.avatar_url
+        } : { id: '', user_id: user.id, full_name: 'Usuário', avatar_url: null }
       };
 
       setReplies([...replies, newReplyWithAuthor as unknown as Reply]);
