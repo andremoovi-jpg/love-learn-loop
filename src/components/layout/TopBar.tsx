@@ -28,7 +28,7 @@ export function TopBar({ title, breadcrumbs, hasSidebar = true }: TopBarProps) {
   const { t } = useTranslation();
 
   return (
-    <header className={`h-16 bg-background border-b border-border flex items-center justify-between px-6 ${hasSidebar ? 'lg:pl-72' : ''} shadow-soft`}>
+    <header className={`h-16 bg-background border-b border-border flex items-center justify-between px-6 ${hasSidebar ? 'lg:pl-64' : ''} shadow-soft`}>
       {/* Left side - Title and Breadcrumbs */}
       <div className="flex items-center space-x-4">
         {breadcrumbs ? (

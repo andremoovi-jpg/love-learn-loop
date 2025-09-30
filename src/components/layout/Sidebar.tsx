@@ -42,6 +42,7 @@ export function Sidebar() {
     { name: t('navigation.products'), href: "/meus-produtos", icon: BookOpen },
     { name: t('navigation.offers'), href: "/ofertas", icon: Tag },
     { name: t('navigation.community'), href: "/comunidade", icon: Users },
+    { name: 'Minhas Comunidades', href: "/minhas-comunidades", icon: MessageSquare },
     { name: t('navigation.achievements'), href: "/conquistas", icon: Trophy },
     { name: t('navigation.profile'), href: "/perfil", icon: User },
   ];
