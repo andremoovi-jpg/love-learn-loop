@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.get-user-emails-admin]
 verify_jwt = true
+
+[functions.download-attachment]
+verify_jwt = true

@@ -1,14 +1,21 @@
 import { FileText, Image, Video, FileIcon, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface FilePreviewProps {
   url: string;
   name?: string;
   type?: string;
   showDownload?: boolean;
+  topicId?: string;
+  replyId?: string;
 }
 
-export function FilePreview({ url, name, type, showDownload = true }: FilePreviewProps) {
+export function FilePreview({ url, name, type, showDownload = true, topicId, replyId }: FilePreviewProps) {
+  const [downloading, setDownloading] = useState(false);
+
   const getFileIcon = () => {
     if (type === 'pdf' || url.endsWith('.pdf')) return FileText;
     if (type === 'image' || url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return Image;
@@ -18,8 +25,36 @@ export function FilePreview({ url, name, type, showDownload = true }: FilePrevie
 
   const Icon = getFileIcon();
 
-  const handleDownload = () => {
-    window.open(url, '_blank');
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      
+      // Extrair caminho do arquivo da URL
+      const urlObj = new URL(url);
+      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/attachments\/(.+)/);
+      const filePath = pathMatch ? pathMatch[1] : url.split('/attachments/')[1];
+
+      if (!filePath) {
+        throw new Error('Invalid file path');
+      }
+
+      // Chamar edge function para gerar signed URL segura
+      const { data, error } = await supabase.functions.invoke('download-attachment', {
+        body: { filePath, topicId, replyId }
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error('Failed to generate download URL');
+
+      // Abrir URL assinada
+      window.open(data.url, '_blank');
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Erro ao baixar arquivo. Verifique suas permissões.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -36,6 +71,7 @@ export function FilePreview({ url, name, type, showDownload = true }: FilePrevie
           size="sm"
           variant="ghost"
           onClick={handleDownload}
+          disabled={downloading}
         >
           <Download className="h-4 w-4" />
         </Button>

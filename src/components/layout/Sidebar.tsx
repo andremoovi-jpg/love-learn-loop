@@ -67,27 +67,55 @@ export function Sidebar() {
   }, [user]);
 
   const loadUserCommunities = async () => {
-    if (!user?.id) return;
+    if (!user) return;
     
     try {
-      // First get user's product IDs
-      const { data: userProducts } = await supabase
-        .from('user_products')
-        .select('product_id')
-        .eq('user_id', user.id);
-      
-      const productIds = userProducts?.map(up => up.product_id) || [];
-      
-      if (productIds.length > 0) {
-        const { data } = await supabase
-          .from('communities')
-          .select('id, name, slug, icon_url')
-          .in('product_id', productIds);
-        
-        setUserCommunities(data || []);
+      console.log('[Sidebar] Loading communities for user:', user.id);
+
+      // Buscar apenas comunidades onde o usuário é membro ativo
+      const { data: memberships } = await supabase
+        .from('community_members')
+        .select(`
+          community_id,
+          is_banned,
+          communities!inner (
+            id,
+            name,
+            slug,
+            icon_url,
+            is_active,
+            product_id,
+            products!inner (
+              is_active
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('is_banned', false);
+
+      console.log('[Sidebar] Community memberships:', memberships);
+
+      if (memberships && memberships.length > 0) {
+        const activeCommunities = memberships
+          .filter(m => 
+            m.communities?.is_active && 
+            m.communities?.products?.is_active
+          )
+          .map(m => ({
+            id: m.communities!.id,
+            name: m.communities!.name,
+            slug: m.communities!.slug,
+            icon_url: m.communities!.icon_url || undefined
+          }));
+
+        console.log('[Sidebar] Active communities:', activeCommunities);
+        setUserCommunities(activeCommunities);
+      } else {
+        console.log('[Sidebar] No active memberships found');
+        setUserCommunities([]);
       }
     } catch (error) {
-      console.error('Error loading user communities:', error);
+      console.error('[Sidebar] Error loading user communities:', error);
     }
   };
 

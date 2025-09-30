@@ -42,9 +42,13 @@ export default function NovoTopico() {
   const [attachments, setAttachments] = useState<Array<{ id: string; url: string; name?: string }>>([]);
 
   useEffect(() => {
-    if (user) {
-      loadCommunity();
+    console.log('[NovoTopico] User check:', { hasUser: !!user, userId: user?.id });
+    if (!user) {
+      console.log('[NovoTopico] No user, redirecting to login');
+      navigate('/login');
+      return;
     }
+    loadCommunity();
   }, [user, slug]);
 
   const loadCommunity = async () => {
@@ -66,7 +70,22 @@ export default function NovoTopico() {
         .eq('user_id', user?.id)
         .single();
 
-      if (!memberData) {
+      const { data: isAdminData } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', user?.id)
+        .single();
+
+      const isMember = !!memberData;
+      const isAdmin = !!isAdminData;
+
+      if (!isMember && !isAdmin) {
+        console.error('[NovoTopico] Access denied - user is not a member:', { 
+          communitySlug: slug, 
+          userId: user?.id, 
+          isMember, 
+          isAdmin 
+        });
         toast.error('Você não tem acesso a esta comunidade');
         navigate('/dashboard');
         return;

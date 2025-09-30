@@ -538,6 +538,7 @@ export default function ForumTopic() {
                       url={file.url}
                       name={file.name}
                       type={file.type}
+                      topicId={topic.id}
                     />
                   ))}
                 </div>
@@ -645,6 +646,7 @@ export default function ForumTopic() {
                           url={file.url}
                           name={file.name}
                           type={file.type}
+                          replyId={reply.id}
                         />
                       ))}
                     </div>
