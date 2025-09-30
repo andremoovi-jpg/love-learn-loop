@@ -133,7 +133,7 @@ export default function ForumTopic() {
         .rpc("get_community_profiles");
 
       const profilesMap = new Map(
-        publicProfiles?.map(p => [p.id, p]) || []
+        publicProfiles?.map(p => [p.user_id, p]) || []
       );
       
       const authorProfile = profilesMap.get(topicData.author_id);
@@ -177,7 +177,7 @@ export default function ForumTopic() {
           .rpc("get_community_profiles");
 
         const profilesMap = new Map(
-          publicProfiles?.map(p => [p.id, p]) || []
+          publicProfiles?.map(p => [p.user_id, p]) || []
         );
         
         const repliesWithAuthors = repliesData.map(reply => {
@@ -269,14 +269,11 @@ export default function ForumTopic() {
       const { data: publicProfiles } = await supabase
         .rpc("get_community_profiles");
       
-      // Find profile by user_id (since user.id is the user_id in profiles table)
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
+      const profilesMap = new Map(
+        publicProfiles?.map(p => [p.user_id, p]) || []
+      );
       
-      const authorProfile = publicProfiles?.find(p => p.id === profileData?.id);
+      const authorProfile = profilesMap.get(user.id);
 
       const newReplyWithAuthor = {
         ...data,

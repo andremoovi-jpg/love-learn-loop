@@ -1346,6 +1346,7 @@ export type Database = {
           full_name: string
           id: string
           total_points: number
+          user_id: string
         }[]
       }
       get_leads_with_password: {
