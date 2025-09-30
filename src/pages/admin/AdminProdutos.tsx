@@ -121,7 +121,7 @@ export default function AdminProdutos() {
     description: '',
     cover_image_url: '',
     product_type: 'course',
-    level: 'beginner',
+    level: 'Iniciante',
     estimated_duration: '',
     cartpanda_product_id: '',
     includes_community: false,
@@ -699,11 +699,11 @@ export default function AdminProdutos() {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Iniciante</SelectItem>
-                        <SelectItem value="intermediate">Intermediário</SelectItem>
-                        <SelectItem value="advanced">Avançado</SelectItem>
-                      </SelectContent>
+                  <SelectContent>
+                    <SelectItem value="Iniciante">Iniciante</SelectItem>
+                    <SelectItem value="Intermediário">Intermediário</SelectItem>
+                    <SelectItem value="Avançado">Avançado</SelectItem>
+                  </SelectContent>
                     </Select>
                   </div>
 
