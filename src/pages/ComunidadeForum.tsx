@@ -83,9 +83,19 @@ export default function ComunidadeForum() {
   });
 
   useEffect(() => {
-    if (user) {
-      loadCommunity();
+    console.log('[ComunidadeForum] Effect triggered:', { 
+      hasUser: !!user, 
+      userId: user?.id, 
+      slug,
+      pathname: window.location.pathname 
+    });
+
+    if (!user) {
+      console.log('[ComunidadeForum] No user, waiting for auth...');
+      return;
     }
+
+    loadCommunity();
   }, [user, slug]);
 
   useEffect(() => {
@@ -96,6 +106,8 @@ export default function ComunidadeForum() {
 
   const loadCommunity = async () => {
     try {
+      console.log('[ComunidadeForum] Loading community:', { slug, userId: user?.id });
+      
       const { data: communityData, error: communityError } = await supabase
         .from('communities')
         .select(`
@@ -105,7 +117,44 @@ export default function ComunidadeForum() {
         .eq('slug', slug)
         .single();
 
-      if (communityError) throw communityError;
+      if (communityError) {
+        console.error('[ComunidadeForum] Error loading community:', communityError);
+        throw communityError;
+      }
+
+      console.log('[ComunidadeForum] Community loaded:', communityData);
+
+      // VERIFICAR ACESSO À COMUNIDADE
+      const { data: memberData } = await supabase
+        .from('community_members')
+        .select('id, is_banned')
+        .eq('community_id', communityData.id)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      const { data: isAdminData } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      const isMember = !!memberData && !memberData.is_banned;
+      const isAdmin = !!isAdminData;
+
+      console.log('[ComunidadeForum] Access check:', { 
+        isMember, 
+        isAdmin, 
+        isBanned: memberData?.is_banned,
+        communityId: communityData.id 
+      });
+
+      if (!isMember && !isAdmin) {
+        console.error('[ComunidadeForum] Access denied - user is not a member');
+        toast.error('Você não tem acesso a esta comunidade');
+        navigate('/dashboard');
+        return;
+      }
+
       setCommunity(communityData);
 
       const { data: categoriesData } = await supabase

@@ -10,6 +10,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  console.log('[ProtectedRoute]', { 
+    pathname: location.pathname, 
+    hasUser: !!user, 
+    loading 
+  });
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -22,6 +28,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user) {
+    console.log('[ProtectedRoute] No user, redirecting to /login from:', location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

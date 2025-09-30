@@ -36,6 +36,7 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [userCommunities, setUserCommunities] = useState<UserCommunity[]>([]);
+  const [isLoadingCommunities, setIsLoadingCommunities] = useState(false);
   
   const navigation = [
     { name: t('navigation.dashboard'), href: "/dashboard", icon: Home },
@@ -67,10 +68,18 @@ export function Sidebar() {
   }, [user]);
 
   const loadUserCommunities = async () => {
-    if (!user) return;
+    if (!user?.id || isLoadingCommunities) {
+      console.log('[Sidebar] Skipping community load:', { 
+        hasUser: !!user?.id, 
+        isLoadingCommunities 
+      });
+      return;
+    }
+    
+    setIsLoadingCommunities(true);
+    console.log('[Sidebar] Loading communities for user:', user.id);
     
     try {
-      console.log('[Sidebar] Loading communities for user:', user.id);
 
       // Buscar apenas comunidades onde o usuário é membro ativo
       const { data: memberships } = await supabase
@@ -116,6 +125,8 @@ export function Sidebar() {
       }
     } catch (error) {
       console.error('[Sidebar] Error loading user communities:', error);
+    } finally {
+      setIsLoadingCommunities(false);
     }
   };
 

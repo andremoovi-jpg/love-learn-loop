@@ -9,6 +9,12 @@ interface AdminRouteProps {
 export const AdminRoute = ({ children }: AdminRouteProps) => {
   const { user, loading } = useAuth()
 
+  console.log('[AdminRoute]', { 
+    hasUser: !!user, 
+    isAdmin: user?.is_admin, 
+    loading 
+  });
+
   // Show loading while checking authentication
   if (loading) {
     return (
@@ -20,11 +26,13 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
 
   // User not authenticated
   if (!user) {
+    console.log('[AdminRoute] No user, redirecting to /login');
     return <Navigate to="/login" replace />
   }
 
   // Check admin using ONLY is_admin from useAuth - NO new database query here
   if (!user.is_admin) {
+    console.log('[AdminRoute] Not admin, redirecting to /dashboard');
     return <Navigate to="/dashboard" replace />
   }
 

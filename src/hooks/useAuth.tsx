@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -77,10 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Prevent multiple initializations
+    if (isInitialized) {
+      console.log('⚠️ InitAuth: Already initialized, skipping...');
+      return;
+    }
+
     // Initialize auth synchronously
     const initAuth = async () => {
       try {
-        console.log('🚀 InitAuth: Starting...');
+        console.log('🚀 InitAuth: Starting...', { isInitialized });
         setLoading(true);
 
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -122,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         console.log('✅ InitAuth: Complete, setting loading to false');
         setLoading(false);
+        setIsInitialized(true);
       }
     };
 
@@ -129,9 +137,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Auth state change listener - CRITICAL: No async Supabase calls inside callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 Auth State Change:', { event, hasSession: !!session, hasUser: !!session?.user });
       setSession(session);
 
       if (event === 'SIGNED_OUT') {
+        console.log('👋 User signed out, redirecting to login');
         setUser(null);
         navigate('/login');
       } else if (session?.user) {
