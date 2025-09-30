@@ -363,11 +363,13 @@ export default function ComunidadeForum() {
                   onClick={() => navigate(`/comunidade/${slug}/topico/${topic.slug}`)}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={topic.author.avatar_url} />
-                        <AvatarFallback>{topic.author.full_name?.[0] || 'U'}</AvatarFallback>
-                      </Avatar>
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={topic.author?.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {topic.author?.full_name?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">

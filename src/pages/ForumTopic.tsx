@@ -492,9 +492,9 @@ export default function ForumTopic() {
               {/* Author info */}
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={topic.author.avatar_url || undefined} />
+                  <AvatarImage src={topic.author?.avatar_url || undefined} />
                   <AvatarFallback>
-                    {topic.author.full_name?.charAt(0) || "?"}
+                    {topic.author?.full_name?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
