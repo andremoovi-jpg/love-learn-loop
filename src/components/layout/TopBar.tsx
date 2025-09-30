@@ -19,15 +19,16 @@ import { useTranslation } from 'react-i18next';
 interface TopBarProps {
   title?: string;
   breadcrumbs?: Array<{ label: string; href?: string }>;
+  hasSidebar?: boolean;
 }
 
-export function TopBar({ title, breadcrumbs }: TopBarProps) {
+export function TopBar({ title, breadcrumbs, hasSidebar = true }: TopBarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   return (
-    <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 lg:pl-72 shadow-soft">
+    <header className={`h-16 bg-background border-b border-border flex items-center justify-between px-6 ${hasSidebar ? 'lg:pl-72' : ''} shadow-soft`}>
       {/* Left side - Title and Breadcrumbs */}
       <div className="flex items-center space-x-4">
         {breadcrumbs ? (

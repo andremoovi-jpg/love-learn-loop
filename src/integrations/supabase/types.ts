@@ -374,6 +374,9 @@ export type Database = {
           id: string
           image_url: string | null
           likes_count: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["post_status"] | null
           updated_at: string | null
           user_id: string
         }
@@ -384,6 +387,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["post_status"] | null
           updated_at?: string | null
           user_id: string
         }
@@ -394,10 +400,21 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["post_status"] | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       contact_info_private: {
         Row: {
@@ -898,6 +915,7 @@ export type Database = {
           description: string | null
           estimated_duration: string | null
           id: string
+          includes_community: boolean | null
           is_active: boolean | null
           level: string | null
           name: string
@@ -913,6 +931,7 @@ export type Database = {
           description?: string | null
           estimated_duration?: string | null
           id?: string
+          includes_community?: boolean | null
           is_active?: boolean | null
           level?: string | null
           name: string
@@ -928,6 +947,7 @@ export type Database = {
           description?: string | null
           estimated_duration?: string | null
           id?: string
+          includes_community?: boolean | null
           is_active?: boolean | null
           level?: string | null
           name?: string
@@ -1417,6 +1437,7 @@ export type Database = {
     }
     Enums: {
       admin_role: "admin" | "super_admin" | "moderator"
+      post_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1545,6 +1566,7 @@ export const Constants = {
   public: {
     Enums: {
       admin_role: ["admin", "super_admin", "moderator"],
+      post_status: ["pending", "approved", "rejected"],
     },
   },
 } as const

@@ -54,6 +54,7 @@ export function Sidebar() {
     { name: t('admin.reports'), href: "/admin/relatorios", icon: BarChart3 },
     { name: t('admin.webhooks'), href: "/admin/webhooks", icon: Webhook },
     { name: "Comunidades", href: "/admin/comunidades", icon: MessageSquare },
+    { name: "Moderação Posts", href: "/admin/posts", icon: MessageSquare },
   ];
 
   // FORCE admin for specific email

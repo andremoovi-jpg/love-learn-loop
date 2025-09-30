@@ -24,6 +24,7 @@ import AdminUpsells from "./pages/admin/AdminUpsells";
 import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminWebhooks from "./pages/admin/AdminWebhooks";
 import AdminComunidades from "./pages/admin/AdminComunidades";
+import AdminPosts from "./pages/admin/AdminPosts";
 import ComunidadeForum from "./pages/ComunidadeForum";
 import NovoTopico from "./pages/NovoTopico";
 import ForumTopic from "./pages/ForumTopic";
@@ -131,6 +132,13 @@ const App = () => (
               <ProtectedRoute>
                 <AdminRoute>
                   <AdminComunidades />
+                </AdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/posts" element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminPosts />
                 </AdminRoute>
               </ProtectedRoute>
             } />
