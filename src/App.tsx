@@ -25,6 +25,7 @@ import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminWebhooks from "./pages/admin/AdminWebhooks";
 import ComunidadeForum from "./pages/ComunidadeForum";
 import NovoTopico from "./pages/NovoTopico";
+import ForumTopic from "./pages/ForumTopic";
 
 const queryClient = new QueryClient();
 
@@ -135,6 +136,11 @@ const App = () => (
             <Route path="/comunidade/:slug/novo-topico" element={
               <ProtectedRoute>
                 <NovoTopico />
+              </ProtectedRoute>
+            } />
+            <Route path="/comunidade/:slug/topico/:topicSlug" element={
+              <ProtectedRoute>
+                <ForumTopic />
               </ProtectedRoute>
             } />
             

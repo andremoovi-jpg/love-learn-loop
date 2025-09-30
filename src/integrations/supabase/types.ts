@@ -1377,6 +1377,10 @@ export type Database = {
         Args: { post_id: string }
         Returns: undefined
       }
+      increment_topic_views: {
+        Args: { topic_id_param: string }
+        Returns: undefined
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
