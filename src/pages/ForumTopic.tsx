@@ -498,7 +498,7 @@ export default function ForumTopic() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{topic.author.full_name}</p>
+                  <p className="font-medium">{topic.author?.full_name || 'Usuário'}</p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(topic.created_at).toLocaleDateString("pt-BR", {
                       day: "2-digit",
@@ -536,16 +536,16 @@ export default function ForumTopic() {
                     <div className="flex items-center gap-3">
                       <Avatar>
                         <AvatarImage
-                          src={reply.author.avatar_url || undefined}
+                          src={reply.author?.avatar_url || undefined}
                         />
                         <AvatarFallback>
-                          {reply.author.full_name?.charAt(0) || "?"}
+                          {reply.author?.full_name?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium">
-                            {reply.author.full_name}
+                            {reply.author?.full_name || 'Usuário'}
                           </p>
                           {reply.is_solution && (
                             <Badge className="gap-1 bg-success text-success-foreground">

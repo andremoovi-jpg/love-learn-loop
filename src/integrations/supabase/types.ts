@@ -742,6 +742,8 @@ export type Database = {
           last_reply_by: string | null
           likes_count: number | null
           replies_count: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           slug: string | null
           solved_reply_id: string | null
           status: string | null
@@ -765,6 +767,8 @@ export type Database = {
           last_reply_by?: string | null
           likes_count?: number | null
           replies_count?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           slug?: string | null
           solved_reply_id?: string | null
           status?: string | null
@@ -788,6 +792,8 @@ export type Database = {
           last_reply_by?: string | null
           likes_count?: number | null
           replies_count?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           slug?: string | null
           solved_reply_id?: string | null
           status?: string | null
@@ -821,6 +827,13 @@ export type Database = {
           {
             foreignKeyName: "forum_topics_last_reply_by_fkey"
             columns: ["last_reply_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forum_topics_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
