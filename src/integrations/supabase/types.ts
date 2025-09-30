@@ -580,6 +580,7 @@ export type Database = {
       }
       forum_replies: {
         Row: {
+          attachments: Json | null
           author_id: string | null
           content: string
           content_html: string | null
@@ -595,6 +596,7 @@ export type Database = {
           topic_id: string | null
         }
         Insert: {
+          attachments?: Json | null
           author_id?: string | null
           content: string
           content_html?: string | null
@@ -610,6 +612,7 @@ export type Database = {
           topic_id?: string | null
         }
         Update: {
+          attachments?: Json | null
           author_id?: string | null
           content?: string
           content_html?: string | null
@@ -728,6 +731,7 @@ export type Database = {
       }
       forum_topics: {
         Row: {
+          attachments: Json | null
           author_id: string | null
           category_id: string | null
           community_id: string | null
@@ -753,6 +757,7 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          attachments?: Json | null
           author_id?: string | null
           category_id?: string | null
           community_id?: string | null
@@ -778,6 +783,7 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          attachments?: Json | null
           author_id?: string | null
           category_id?: string | null
           community_id?: string | null

@@ -33,6 +33,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DOMPurify from "dompurify";
+import { FilePreview } from '@/components/FilePreview';
+import { MultiFileUpload } from '@/components/MultiFileUpload';
 
 interface Profile {
   id: string;
@@ -66,6 +68,7 @@ interface Topic {
   is_locked: boolean;
   is_solved: boolean;
   created_at: string;
+  attachments?: Array<{ id: string; url: string; name?: string; type?: string }>;
   author: Profile;
   category: Category;
   community: Community;
@@ -78,6 +81,7 @@ interface Reply {
   is_solution: boolean;
   likes_count: number;
   created_at: string;
+  attachments?: Array<{ id: string; url: string; name?: string; type?: string }>;
   author: Profile;
 }
 
@@ -93,6 +97,7 @@ export default function ForumTopic() {
   const [userLiked, setUserLiked] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
+  const [replyAttachments, setReplyAttachments] = useState<Array<{ id: string; url: string; name?: string }>>([]);
 
   useEffect(() => {
     if (user && slug && topicSlug) {
@@ -215,6 +220,7 @@ export default function ForumTopic() {
           topic_id: topic.id,
           author_id: user.id,
           content: sanitizedContent,
+          attachments: replyAttachments.length > 0 ? replyAttachments : []
         })
         .select(
           `
@@ -228,6 +234,7 @@ export default function ForumTopic() {
 
       setReplies([...replies, data as unknown as Reply]);
       setNewReply("");
+      setReplyAttachments([]);
       toast.success("Resposta adicionada com sucesso!");
     } catch (error: any) {
       console.error("Error adding reply:", error);
@@ -520,6 +527,21 @@ export default function ForumTopic() {
                   __html: DOMPurify.sanitize(topic.content),
                 }}
               />
+              
+              {/* Attachments */}
+              {topic.attachments && topic.attachments.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-semibold">Anexos:</h4>
+                  {topic.attachments.map((file) => (
+                    <FilePreview
+                      key={file.id}
+                      url={file.url}
+                      name={file.name}
+                      type={file.type}
+                    />
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -612,6 +634,21 @@ export default function ForumTopic() {
                       __html: DOMPurify.sanitize(reply.content),
                     }}
                   />
+                  
+                  {/* Reply Attachments */}
+                  {reply.attachments && reply.attachments.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <h5 className="text-xs font-semibold">Anexos:</h5>
+                      {reply.attachments.map((file) => (
+                        <FilePreview
+                          key={file.id}
+                          url={file.url}
+                          name={file.name}
+                          type={file.type}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -631,6 +668,20 @@ export default function ForumTopic() {
                   rows={6}
                   className="resize-none"
                 />
+                
+                {/* Reply Attachments */}
+                <div>
+                  <MultiFileUpload
+                    bucket="attachments"
+                    files={replyAttachments}
+                    onFilesChange={setReplyAttachments}
+                    maxFiles={5}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Máximo de 5 arquivos, 20MB cada
+                  </p>
+                </div>
+                
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-muted-foreground">
                     {newReply.length} / 10.000 caracteres

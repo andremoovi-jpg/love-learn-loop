@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TopBar } from '@/components/layout/TopBar';
 import { ArrowLeft, Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { MultiFileUpload } from '@/components/MultiFileUpload';
 
 interface Community {
   id: string;
@@ -38,6 +39,7 @@ export default function NovoTopico() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [attachments, setAttachments] = useState<Array<{ id: string; url: string; name?: string }>>([]);
 
   useEffect(() => {
     if (user) {
@@ -111,7 +113,8 @@ export default function NovoTopico() {
           author_id: user?.id,
           title: title.trim(),
           content: content.trim(),
-          status: 'active'
+          status: 'active',
+          attachments: attachments.length > 0 ? attachments : []
         })
         .select('slug')
         .single();
@@ -222,6 +225,20 @@ export default function NovoTopico() {
                   />
                   <p className="text-xs text-muted-foreground">
                     {content.length}/5000 caracteres
+                  </p>
+                </div>
+
+                {/* Anexos */}
+                <div className="space-y-2">
+                  <Label>Anexos (opcional)</Label>
+                  <MultiFileUpload
+                    bucket="attachments"
+                    files={attachments}
+                    onFilesChange={setAttachments}
+                    maxFiles={5}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Máximo de 5 arquivos, 20MB cada. Imagens, PDFs e documentos suportados.
                   </p>
                 </div>
 
