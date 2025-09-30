@@ -322,12 +322,29 @@ export default function ForumTopic() {
     }
   };
 
+  const handleDeleteTopic = async () => {
+    if (!user || !topic) return;
+
+    try {
+      await supabase
+        .from("forum_topics")
+        .update({ status: "deleted" })
+        .eq("id", topic.id);
+
+      toast.success("Tópico deletado");
+      navigate(`/comunidade/${slug}`);
+    } catch (error: any) {
+      console.error("Error deleting topic:", error);
+      toast.error("Erro ao deletar tópico");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen w-full">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <TopBar />
+          <TopBar hasSidebar={false} />
           <main className="flex-1 p-6">
             <div className="flex items-center justify-center h-64">
               <div className="text-center space-y-4">
@@ -347,7 +364,7 @@ export default function ForumTopic() {
     <div className="flex min-h-screen w-full">
       <Sidebar />
       <div className="flex-1 flex flex-col">
-        <TopBar />
+        <TopBar hasSidebar={false} />
         <main className="flex-1 p-6 space-y-6">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -376,15 +393,42 @@ export default function ForumTopic() {
             <span className="text-foreground">{topic.title}</span>
           </div>
 
-          {/* Back button */}
-          <Button
-            variant="ghost"
-            onClick={() => navigate(`/comunidade/${slug}`)}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar para comunidade
-          </Button>
+          {/* Back button and actions */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(`/comunidade/${slug}`)}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar para comunidade
+            </Button>
+
+            {user && (topic.author_id === user.id || user.is_admin) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {topic.author_id === user.id && (
+                    <DropdownMenuItem className="gap-2">
+                      <Edit className="w-4 h-4" />
+                      Editar
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem
+                    className="gap-2 text-destructive focus:text-destructive"
+                    onClick={handleDeleteTopic}
+                  >
+                    <Trash className="w-4 h-4" />
+                    Deletar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
 
           {/* Topic Card */}
           <Card>

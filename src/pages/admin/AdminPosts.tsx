@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Clock, Eye, MessageSquare } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, MessageSquare, Users } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -21,6 +21,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PostWithProfile {
   id: string;
@@ -41,12 +48,37 @@ interface PostWithProfile {
   };
 }
 
+interface TopicWithProfile {
+  id: string;
+  title: string;
+  content: string;
+  author_id: string;
+  community_id: string;
+  views_count: number;
+  replies_count: number;
+  likes_count: number;
+  status: 'pending' | 'approved' | 'rejected' | 'deleted';
+  created_at: string;
+  slug: string;
+  profile?: {
+    user_id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  community?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
+
 export default function AdminPosts() {
   const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [contentType, setContentType] = useState<'posts' | 'topics'>('topics');
 
-  // Query para posts
-  const { data: posts, isLoading } = useQuery<PostWithProfile[]>({
+  // Query para posts de comunidade geral
+  const { data: posts, isLoading: postsLoading } = useQuery<PostWithProfile[]>({
     queryKey: ['admin-posts', selectedStatus],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -57,7 +89,6 @@ export default function AdminPosts() {
 
       if (error) throw error;
 
-      // Buscar perfis dos usuários
       if (data && data.length > 0) {
         const userIds = [...new Set(data.map(p => p.user_id))];
         const { data: profilesData } = await supabase
@@ -77,16 +108,55 @@ export default function AdminPosts() {
 
       return data as PostWithProfile[] || [];
     },
+    enabled: contentType === 'posts',
   });
+
+  // Query para tópicos do fórum
+  const { data: topics, isLoading: topicsLoading } = useQuery<TopicWithProfile[]>({
+    queryKey: ['admin-topics', selectedStatus],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('forum_topics')
+        .select('*, community:communities(id, name, slug)')
+        .eq('status', selectedStatus)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(t => t.author_id))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+
+        const profilesMap = new Map(
+          profilesData?.map(p => [p.user_id, p]) || []
+        );
+
+        return data.map(topic => ({
+          ...topic,
+          profile: profilesMap.get(topic.author_id)
+        })) as TopicWithProfile[];
+      }
+
+      return data as TopicWithProfile[] || [];
+    },
+    enabled: contentType === 'topics',
+  });
+
+  const isLoading = contentType === 'posts' ? postsLoading : topicsLoading;
 
   // Query para estatísticas
   const { data: stats } = useQuery({
-    queryKey: ['admin-posts-stats'],
+    queryKey: ['admin-stats', contentType],
     queryFn: async () => {
+      const table = contentType === 'posts' ? 'community_posts' : 'forum_topics';
+      
       const [pending, approved, rejected] = await Promise.all([
-        supabase.from('community_posts').select('id', { count: 'exact' }).eq('status', 'pending'),
-        supabase.from('community_posts').select('id', { count: 'exact' }).eq('status', 'approved'),
-        supabase.from('community_posts').select('id', { count: 'exact' }).eq('status', 'rejected'),
+        supabase.from(table).select('id', { count: 'exact' }).eq('status', 'pending'),
+        supabase.from(table).select('id', { count: 'exact' }).eq('status', 'approved'),
+        supabase.from(table).select('id', { count: 'exact' }).eq('status', 'rejected'),
       ]);
 
       return {
@@ -97,51 +167,55 @@ export default function AdminPosts() {
     },
   });
 
-  // Mutation para aprovar post
+  // Mutation para aprovar
   const approveMutation = useMutation({
-    mutationFn: async (postId: string) => {
+    mutationFn: async (id: string) => {
+      const table = contentType === 'posts' ? 'community_posts' : 'forum_topics';
       const { error } = await supabase
-        .from('community_posts')
+        .from(table)
         .update({
           status: 'approved',
           reviewed_at: new Date().toISOString(),
           reviewed_by: (await supabase.auth.getUser()).data.user?.id,
         })
-        .eq('id', postId);
+        .eq('id', id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-posts-stats'] });
-      toast.success("Post aprovado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ['admin-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      toast.success(contentType === 'posts' ? "Post aprovado!" : "Tópico aprovado!");
     },
     onError: (error: any) => {
-      toast.error("Erro ao aprovar post: " + error.message);
+      toast.error("Erro ao aprovar: " + error.message);
     },
   });
 
-  // Mutation para rejeitar post
+  // Mutation para rejeitar
   const rejectMutation = useMutation({
-    mutationFn: async (postId: string) => {
+    mutationFn: async (id: string) => {
+      const table = contentType === 'posts' ? 'community_posts' : 'forum_topics';
       const { error } = await supabase
-        .from('community_posts')
+        .from(table)
         .update({
           status: 'rejected',
           reviewed_at: new Date().toISOString(),
           reviewed_by: (await supabase.auth.getUser()).data.user?.id,
         })
-        .eq('id', postId);
+        .eq('id', id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-posts-stats'] });
-      toast.success("Post rejeitado!");
+      queryClient.invalidateQueries({ queryKey: ['admin-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      toast.success(contentType === 'posts' ? "Post rejeitado!" : "Tópico rejeitado!");
     },
     onError: (error: any) => {
-      toast.error("Erro ao rejeitar post: " + error.message);
+      toast.error("Erro ao rejeitar: " + error.message);
     },
   });
 
@@ -165,11 +239,33 @@ export default function AdminPosts() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Moderação de Posts</h1>
-        <p className="text-muted-foreground mt-2">
-          Aprove ou rejeite posts da comunidade
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Moderação</h1>
+          <p className="text-muted-foreground mt-2">
+            Aprove ou rejeite conteúdo da comunidade
+          </p>
+        </div>
+        
+        <Select value={contentType} onValueChange={(v) => setContentType(v as any)}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="topics">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Tópicos do Fórum
+              </div>
+            </SelectItem>
+            <SelectItem value="posts">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Posts Gerais
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Cards de Estatísticas */}
@@ -233,7 +329,116 @@ export default function AdminPosts() {
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : posts && posts.length > 0 ? (
+          ) : contentType === 'topics' && topics && topics.length > 0 ? (
+            <div className="space-y-4">
+              {topics.map((topic) => (
+                <Card key={topic.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={topic.profile?.avatar_url} />
+                        <AvatarFallback>
+                          {topic.profile?.full_name?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <div>
+                            <p className="font-semibold">{topic.profile?.full_name || 'Usuário'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {formatDistanceToNow(new Date(topic.created_at), {
+                                addSuffix: true,
+                                locale: ptBR,
+                              })}
+                            </p>
+                            {topic.community && (
+                              <Badge variant="outline" className="mt-1">
+                                {topic.community.name}
+                              </Badge>
+                            )}
+                          </div>
+                          {getStatusBadge(topic.status)}
+                        </div>
+
+                        <h3 className="font-bold text-lg mb-2">{topic.title}</h3>
+                        <p className="text-foreground mb-4 whitespace-pre-wrap line-clamp-3">
+                          {topic.content}
+                        </p>
+
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
+                            <span>{topic.replies_count} respostas</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{topic.views_count} visualizações</span>
+                          </div>
+                        </div>
+
+                        {selectedStatus === 'pending' && (
+                          <div className="flex items-center gap-2">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" className="gap-2">
+                                  <CheckCircle className="h-4 w-4" />
+                                  Aprovar
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Aprovar tópico?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Este tópico será publicado na comunidade e ficará visível para
+                                    todos os membros.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => approveMutation.mutate(topic.id)}
+                                  >
+                                    Confirmar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive" className="gap-2">
+                                  <XCircle className="h-4 w-4" />
+                                  Rejeitar
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Rejeitar tópico?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Este tópico não será publicado. O autor receberá uma notificação
+                                    informando que foi rejeitado.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => rejectMutation.mutate(topic.id)}
+                                  >
+                                    Confirmar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : contentType === 'posts' && posts && posts.length > 0 ? (
             <div className="space-y-4">
               {posts.map((post) => (
                 <Card key={post.id}>
@@ -356,9 +561,9 @@ export default function AdminPosts() {
             <Card>
               <CardContent className="p-12 text-center">
                 <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhum post encontrado</h3>
+                <h3 className="text-lg font-medium mb-2">Nenhum conteúdo encontrado</h3>
                 <p className="text-muted-foreground">
-                  Não há posts com status "{selectedStatus === 'pending' ? 'pendente' : selectedStatus === 'approved' ? 'aprovado' : 'rejeitado'}"
+                  Não há {contentType === 'topics' ? 'tópicos' : 'posts'} com status "{selectedStatus === 'pending' ? 'pendente' : selectedStatus === 'approved' ? 'aprovado' : 'rejeitado'}"
                 </p>
               </CardContent>
             </Card>
