@@ -477,10 +477,11 @@ export default function AdminComunidades() {
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
       const table = moderationType === 'posts' ? 'community_posts' : 'forum_topics';
+      const status = moderationType === 'posts' ? 'approved' : 'active';
       const { error } = await supabase
         .from(table)
         .update({
-          status: 'approved',
+          status,
           reviewed_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -501,10 +502,11 @@ export default function AdminComunidades() {
   const rejectMutation = useMutation({
     mutationFn: async (id: string) => {
       const table = moderationType === 'posts' ? 'community_posts' : 'forum_topics';
+      const status = moderationType === 'posts' ? 'rejected' : 'hidden';
       const { error } = await supabase
         .from(table)
         .update({
-          status: 'rejected',
+          status,
           reviewed_at: new Date().toISOString(),
         })
         .eq('id', id);
