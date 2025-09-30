@@ -1285,6 +1285,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_community_access: {
+        Args: { community_id_param: string; user_id_param?: string }
+        Returns: boolean
+      }
       check_is_admin: {
         Args: { check_user_id: string }
         Returns: boolean

@@ -38,21 +38,9 @@ export default function MinhasComunidades() {
 
   const loadUserCommunities = async () => {
     try {
-      // Buscar produtos do usuário
-      const { data: userProducts } = await supabase
-        .from('user_products')
-        .select('product_id')
-        .eq('user_id', user?.id);
-
-      if (!userProducts || userProducts.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const productIds = userProducts.map(up => up.product_id);
-
-      // Buscar comunidades desses produtos
-      const { data, error } = await supabase
+      // Buscar todas as comunidades que o usuário tem acesso
+      // (RLS policies já fazem a verificação de produtos regulares e independentes)
+      const { data: allCommunities, error } = await supabase
         .from('communities')
         .select(`
           id,
@@ -62,14 +50,40 @@ export default function MinhasComunidades() {
           slug,
           member_count,
           post_count,
-          product:products!inner(name, cover_image_url)
+          product_id,
+          products!left(name, cover_image_url)
         `)
-        .in('product_id', productIds)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCommunities(data || []);
+
+      // Filtrar comunidades onde usuário não está banido
+      if (!allCommunities || allCommunities.length === 0) {
+        setCommunities([]);
+        setLoading(false);
+        return;
+      }
+
+      const communityIds = allCommunities.map(c => c.id);
+      const { data: memberData } = await supabase
+        .from('community_members')
+        .select('community_id, is_banned')
+        .eq('user_id', user?.id)
+        .in('community_id', communityIds);
+
+      const bannedCommunityIds = new Set(
+        memberData?.filter(m => m.is_banned).map(m => m.community_id) || []
+      );
+
+      const accessibleCommunities = allCommunities
+        .filter(c => !bannedCommunityIds.has(c.id))
+        .map(c => ({
+          ...c,
+          product: c.products || { name: c.name, cover_image_url: c.cover_image_url }
+        }));
+
+      setCommunities(accessibleCommunities as Community[]);
     } catch (error) {
       console.error('Error loading communities:', error);
     } finally {

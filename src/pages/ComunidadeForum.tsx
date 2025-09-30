@@ -143,12 +143,19 @@ export default function ComunidadeForum() {
     try {
       const { data } = await supabase
         .from('community_members')
-        .select('role, reputation_points, posts_count, solutions_count, badges')
+        .select('role, reputation_points, posts_count, solutions_count, badges, is_banned')
         .eq('community_id', community.id)
         .eq('user_id', user.id)
         .single();
 
       if (data) {
+        // Verificar se usuário está banido
+        if (data.is_banned) {
+          toast.error('Você foi banido desta comunidade');
+          navigate('/minhas-comunidades');
+          return;
+        }
+
         setUserRole(data.role as 'member' | 'moderator' | 'admin');
         setUserStats({
           reputation: data.reputation_points || 0,

@@ -124,6 +124,7 @@ export default function AdminProdutos() {
     level: 'beginner',
     estimated_duration: '',
     cartpanda_product_id: '',
+    includes_community: false,
     content: {
       modules: [] as Module[]
     }
@@ -178,6 +179,7 @@ export default function AdminProdutos() {
         level: product.level,
         estimated_duration: product.estimated_duration,
         cartpanda_product_id: product.cartpanda_product_id || '',
+        includes_community: (product as any).includes_community || false,
         content: product.content || { modules: [] }
       });
     } else {
@@ -191,6 +193,7 @@ export default function AdminProdutos() {
         level: 'beginner',
         estimated_duration: '',
         cartpanda_product_id: '',
+        includes_community: false,
         content: { modules: [] }
       });
     }
@@ -397,6 +400,7 @@ export default function AdminProdutos() {
         level: formData.level,
         estimated_duration: formData.estimated_duration,
         cartpanda_product_id: formData.cartpanda_product_id || null,
+        includes_community: formData.includes_community,
         content: contentToSave as any
       };
 
@@ -546,6 +550,7 @@ export default function AdminProdutos() {
                           <Badge variant="outline">
                             {product.product_type === 'course' ? 'Curso' :
                              product.product_type === 'ebook' ? 'E-book' :
+                             product.product_type === 'community' ? 'Comunidade' :
                              'Mentoria'}
                           </Badge>
                         </TableCell>
@@ -680,6 +685,7 @@ export default function AdminProdutos() {
                         <SelectItem value="course">Curso</SelectItem>
                         <SelectItem value="ebook">E-book</SelectItem>
                         <SelectItem value="mentorship">Mentoria</SelectItem>
+                        <SelectItem value="community">Comunidade</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -719,6 +725,32 @@ export default function AdminProdutos() {
                     placeholder="ID do produto no CartPanda (opcional)"
                   />
                 </div>
+
+                {/* Campo para incluir comunidade (apenas para produtos regulares) */}
+                {formData.product_type !== 'community' && (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="includes_community"
+                      checked={formData.includes_community}
+                      onChange={(e) => setFormData({ ...formData, includes_community: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <label htmlFor="includes_community" className="text-sm font-medium cursor-pointer">
+                      Este produto inclui acesso à comunidade
+                    </label>
+                  </div>
+                )}
+
+                {/* Aviso para produtos tipo comunidade */}
+                {formData.product_type === 'community' && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      <strong>Produto tipo Comunidade:</strong> Este produto dará acesso a uma comunidade específica. 
+                      Certifique-se de que existe uma comunidade com o mesmo slug deste produto.
+                    </p>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="content" className="flex-1 overflow-hidden flex flex-col">
