@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,66 +5,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 export function NotificationBell() {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const navigate = useNavigate();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useRealtimeNotifications();
 
-  useEffect(() => {
-    if (user) {
-      loadNotifications();
-      subscribeToNotifications();
+  const handleNotificationClick = (notification: any) => {
+    markAsRead(notification.id);
+    if (notification.link) {
+      navigate(notification.link);
     }
-  }, [user]);
-
-  const loadNotifications = async () => {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', user!.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (data) {
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.is_read).length);
-    }
-  };
-
-  const subscribeToNotifications = () => {
-    const subscription = supabase
-      .channel('notifications')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user!.id}`
-      }, (payload) => {
-        setNotifications(prev => [payload.new as any, ...prev]);
-        setUnreadCount(prev => prev + 1);
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  };
-
-  const markAsRead = async (id: string) => {
-    await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', id);
-
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, is_read: true } : n)
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   return (
@@ -74,40 +28,63 @@ export function NotificationBell() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-              {unreadCount}
-            </span>
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="p-4 border-b">
+      <PopoverContent className="w-96 p-0" align="end">
+        <div className="p-4 border-b flex items-center justify-between">
           <h3 className="font-semibold">Notificações</h3>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={markAllAsRead}
+              className="h-8 text-xs"
+            >
+              Marcar todas como lidas
+            </Button>
+          )}
         </div>
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-[500px] overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="p-4 text-center text-muted-foreground">
-              Nenhuma notificação
-            </p>
+            <div className="p-8 text-center text-muted-foreground">
+              <Bell className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p>Nenhuma notificação</p>
+            </div>
           ) : (
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 border-b hover:bg-accent cursor-pointer ${
+                className={`p-4 border-b hover:bg-accent/80 cursor-pointer transition-colors ${
                   !notification.is_read ? 'bg-accent/50' : ''
                 }`}
-                onClick={() => markAsRead(notification.id)}
+                onClick={() => handleNotificationClick(notification)}
               >
-                <p className="font-medium text-sm">{notification.title}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {notification.message}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {formatDistanceToNow(new Date(notification.created_at), {
-                    addSuffix: true,
-                    locale: ptBR
-                  })}
-                </p>
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{notification.title}</p>
+                    {notification.message && (
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {notification.message}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {formatDistanceToNow(new Date(notification.created_at), {
+                        addSuffix: true,
+                        locale: ptBR
+                      })}
+                    </p>
+                  </div>
+                  {!notification.is_read && (
+                    <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                  )}
+                </div>
               </div>
             ))
           )}
