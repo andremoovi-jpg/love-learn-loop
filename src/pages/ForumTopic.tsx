@@ -114,7 +114,6 @@ export default function ForumTopic() {
         .select(
           `
           *,
-          author:profiles!author_id(id, user_id, full_name, avatar_url),
           category:community_categories(id, name, color, icon),
           community:communities(id, name, slug)
         `
@@ -129,7 +128,17 @@ export default function ForumTopic() {
         return;
       }
 
-      setTopic(topicData as unknown as Topic);
+      // Load author profile separately
+      const { data: authorData } = await supabase
+        .from("profiles")
+        .select("id, user_id, full_name, avatar_url")
+        .eq("user_id", topicData.author_id)
+        .single();
+
+      setTopic({
+        ...topicData,
+        author: authorData || { id: '', user_id: topicData.author_id, full_name: 'Usuário', avatar_url: null }
+      } as unknown as Topic);
 
       // Check if user is member
       const { data: memberData } = await supabase
@@ -147,18 +156,32 @@ export default function ForumTopic() {
       // Load replies
       const { data: repliesData, error: repliesError } = await supabase
         .from("forum_replies")
-        .select(
-          `
-          *,
-          author:profiles!author_id(id, user_id, full_name, avatar_url)
-        `
-        )
+        .select("*")
         .eq("topic_id", topicData.id)
         .eq("status", "active")
         .order("created_at", { ascending: true });
 
       if (repliesError) throw repliesError;
-      setReplies((repliesData as unknown as Reply[]) || []);
+
+      // Load authors for all replies
+      if (repliesData && repliesData.length > 0) {
+        const authorIds = [...new Set(repliesData.map(r => r.author_id))];
+        const { data: authorsData } = await supabase
+          .from("profiles")
+          .select("id, user_id, full_name, avatar_url")
+          .in("user_id", authorIds);
+
+        const authorsMap = new Map(authorsData?.map(a => [a.user_id, a]) || []);
+        
+        const repliesWithAuthors = repliesData.map(reply => ({
+          ...reply,
+          author: authorsMap.get(reply.author_id) || { id: '', user_id: reply.author_id, full_name: 'Usuário', avatar_url: null }
+        }));
+
+        setReplies(repliesWithAuthors as unknown as Reply[]);
+      } else {
+        setReplies([]);
+      }
 
       // Check if user liked
       if (user) {
@@ -222,17 +245,24 @@ export default function ForumTopic() {
           content: sanitizedContent,
           attachments: replyAttachments.length > 0 ? replyAttachments : []
         })
-        .select(
-          `
-          *,
-          author:profiles!author_id(id, user_id, full_name, avatar_url)
-        `
-        )
+        .select("*")
         .single();
 
       if (error) throw error;
 
-      setReplies([...replies, data as unknown as Reply]);
+      // Load author profile for new reply
+      const { data: authorData } = await supabase
+        .from("profiles")
+        .select("id, user_id, full_name, avatar_url")
+        .eq("user_id", user.id)
+        .single();
+
+      const newReplyWithAuthor = {
+        ...data,
+        author: authorData || { id: '', user_id: user.id, full_name: 'Usuário', avatar_url: null }
+      };
+
+      setReplies([...replies, newReplyWithAuthor as unknown as Reply]);
       setNewReply("");
       setReplyAttachments([]);
       toast.success("Resposta adicionada com sucesso!");
