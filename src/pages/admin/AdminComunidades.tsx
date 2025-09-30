@@ -124,13 +124,14 @@ export default function AdminComunidades() {
     },
   });
 
-  // Communities list
+  // Communities list - Only product-linked communities
   const { data: communities } = useQuery({
     queryKey: ['communities-admin'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('communities')
         .select('*')
+        .not('product_id', 'is', null) // Only communities with product_id
         .order('created_at', { ascending: false });
       
       if (error) throw error;
