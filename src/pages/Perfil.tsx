@@ -94,14 +94,16 @@ export default function Perfil() {
 
     setSaving(true);
     try {
+      // IMPORTANTE: Sempre UPDATE, nunca UPSERT para evitar duplicatas
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: user.id,
+        .update({
           full_name: profile.full_name,
           phone: profile.phone,
-          avatar_url: profile.avatar_url
-        });
+          avatar_url: profile.avatar_url,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
