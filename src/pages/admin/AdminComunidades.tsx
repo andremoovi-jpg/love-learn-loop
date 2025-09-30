@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { BarChart3, FolderOpen, Shield, Users, Award, Settings, Plus, Pencil, Trash2, CheckCircle, XCircle, Eye, Ban, UserCog } from "lucide-react";
+import { BarChart3, FolderOpen, Shield, Users, Award, Settings, Plus, Pencil, Trash2, CheckCircle, XCircle, Eye, Ban, UserCog, MessageSquare } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -58,12 +59,47 @@ const badgeSchema = z.object({
   sort_order: z.number().int().min(0).default(0),
 });
 
+interface PostWithProfile {
+  id: string;
+  user_id: string;
+  content: string;
+  image_url: string;
+  likes_count: number;
+  comments_count: number;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  profile?: {
+    full_name: string;
+    avatar_url: string;
+  };
+}
+
+interface TopicWithProfile {
+  id: string;
+  title: string;
+  content: string;
+  author_id: string;
+  views_count: number;
+  replies_count: number;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  community?: {
+    name: string;
+  };
+  profile?: {
+    full_name: string;
+    avatar_url: string;
+  };
+}
+
 export default function AdminComunidades() {
   const [selectedCommunityId, setSelectedCommunityId] = useState<string>("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isBadgeDialogOpen, setIsBadgeDialogOpen] = useState(false);
+  const [moderationType, setModerationType] = useState<'reports' | 'posts' | 'topics'>('topics');
+  const [selectedStatus, setSelectedStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const queryClient = useQueryClient();
 
   // ============= QUERIES =============
@@ -160,6 +196,95 @@ export default function AdminComunidades() {
       if (error) throw error;
       return data;
     },
+  });
+
+  // Posts para moderação
+  const { data: moderationPosts } = useQuery<PostWithProfile[]>({
+    queryKey: ['admin-posts-moderation', selectedStatus],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select('*')
+        .eq('status', selectedStatus)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(p => p.user_id))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+
+        const profilesMap = new Map(
+          profilesData?.map(p => [p.user_id, p]) || []
+        );
+
+        return data.map(post => ({
+          ...post,
+          profile: profilesMap.get(post.user_id)
+        })) as PostWithProfile[];
+      }
+
+      return data as PostWithProfile[] || [];
+    },
+    enabled: moderationType === 'posts',
+  });
+
+  // Tópicos para moderação
+  const { data: moderationTopics } = useQuery<TopicWithProfile[]>({
+    queryKey: ['admin-topics-moderation', selectedStatus],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('forum_topics')
+        .select('*, community:communities(name)')
+        .eq('status', selectedStatus)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(t => t.author_id))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+
+        const profilesMap = new Map(
+          profilesData?.map(p => [p.user_id, p]) || []
+        );
+
+        return data.map(topic => ({
+          ...topic,
+          profile: profilesMap.get(topic.author_id)
+        })) as TopicWithProfile[];
+      }
+
+      return data as TopicWithProfile[] || [];
+    },
+    enabled: moderationType === 'topics',
+  });
+
+  // Stats de moderação
+  const { data: moderationStats } = useQuery({
+    queryKey: ['moderation-stats', moderationType],
+    queryFn: async () => {
+      const table = moderationType === 'posts' ? 'community_posts' : 'forum_topics';
+      
+      const [pending, approved, rejected] = await Promise.all([
+        supabase.from(table).select('id', { count: 'exact' }).eq('status', 'pending'),
+        supabase.from(table).select('id', { count: 'exact' }).eq('status', 'approved'),
+        supabase.from(table).select('id', { count: 'exact' }).eq('status', 'rejected'),
+      ]);
+
+      return {
+        pending: pending.count || 0,
+        approved: approved.count || 0,
+        rejected: rejected.count || 0,
+      };
+    },
+    enabled: moderationType !== 'reports',
   });
 
   // Badges
@@ -345,6 +470,55 @@ export default function AdminComunidades() {
     },
     onError: (error) => {
       toast.error("Erro ao resolver report: " + error.message);
+    },
+  });
+
+  // Post/Topic moderation mutations
+  const approveMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const table = moderationType === 'posts' ? 'community_posts' : 'forum_topics';
+      const { error } = await supabase
+        .from(table)
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-posts-moderation'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-topics-moderation'] });
+      queryClient.invalidateQueries({ queryKey: ['moderation-stats'] });
+      toast.success(moderationType === 'posts' ? "Post aprovado!" : "Tópico aprovado!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao aprovar: " + error.message);
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const table = moderationType === 'posts' ? 'community_posts' : 'forum_topics';
+      const { error } = await supabase
+        .from(table)
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-posts-moderation'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-topics-moderation'] });
+      queryClient.invalidateQueries({ queryKey: ['moderation-stats'] });
+      toast.success(moderationType === 'posts' ? "Post rejeitado!" : "Tópico rejeitado!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao rejeitar: " + error.message);
     },
   });
 
@@ -835,79 +1009,319 @@ export default function AdminComunidades() {
 
         {/* ABA 3: MODERAÇÃO */}
         <TabsContent value="moderation" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Moderação de Conteúdo</CardTitle>
-              <CardDescription>Gerencie reports e conteúdo reportado</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Motivo</TableHead>
-                    <TableHead>Reportado por</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports?.map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {report.topic_id ? "Tópico" : "Resposta"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{report.reason}</TableCell>
-                      <TableCell>Usuário</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={
-                            report.status === 'pending' ? "secondary" :
-                            report.status === 'resolved' ? "default" : "destructive"
-                          }
-                        >
-                          {report.status === 'pending' ? "Pendente" : 
-                           report.status === 'resolved' ? "Resolvido" : report.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(report.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        {report.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => resolveReportMutation.mutate({ 
-                                reportId: report.id, 
-                                action: 'approved' 
-                              })}
-                            >
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => resolveReportMutation.mutate({ 
-                                reportId: report.id, 
-                                action: 'content_removed' 
-                              })}
-                            >
-                              <XCircle className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
+          {/* Seletor de Tipo de Moderação */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Moderação de Conteúdo</h3>
+              <p className="text-sm text-muted-foreground">
+                Gerencie posts, tópicos e reports da comunidade
+              </p>
+            </div>
+            <Select value={moderationType} onValueChange={(v) => setModerationType(v as any)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="topics">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Tópicos do Fórum
+                  </div>
+                </SelectItem>
+                <SelectItem value="posts">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Posts Gerais
+                  </div>
+                </SelectItem>
+                <SelectItem value="reports">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 w-4" />
+                    Reports
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Stats de Moderação para Posts/Topics */}
+          {moderationType !== 'reports' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{moderationStats?.pending || 0}</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{moderationStats?.approved || 0}</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Rejeitados</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{moderationStats?.rejected || 0}</div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Content baseado no tipo de moderação */}
+          {moderationType === 'reports' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Reports Pendentes</CardTitle>
+                <CardDescription>Denúncias de conteúdo impróprio</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Motivo</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {reports?.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {report.topic_id ? "Tópico" : "Resposta"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{report.reason}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              report.status === 'pending' ? "secondary" :
+                              report.status === 'resolved' ? "default" : "destructive"
+                            }
+                          >
+                            {report.status === 'pending' ? "Pendente" : 
+                             report.status === 'resolved' ? "Resolvido" : report.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(report.created_at).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell>
+                          {report.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => resolveReportMutation.mutate({ 
+                                  reportId: report.id, 
+                                  action: 'approved' 
+                                })}
+                              >
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => resolveReportMutation.mutate({ 
+                                  reportId: report.id, 
+                                  action: 'content_removed' 
+                                })}
+                              >
+                                <XCircle className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Tabs para filtrar por status */}
+              <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as any)}>
+                <TabsList>
+                  <TabsTrigger value="pending">
+                    Pendentes ({moderationStats?.pending || 0})
+                  </TabsTrigger>
+                  <TabsTrigger value="approved">
+                    Aprovados ({moderationStats?.approved || 0})
+                  </TabsTrigger>
+                  <TabsTrigger value="rejected">
+                    Rejeitados ({moderationStats?.rejected || 0})
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value={selectedStatus} className="space-y-4 mt-4">
+                  {moderationType === 'topics' && moderationTopics && moderationTopics.length > 0 ? (
+                    moderationTopics.map((topic) => (
+                      <Card key={topic.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage src={topic.profile?.avatar_url} />
+                              <AvatarFallback>
+                                {topic.profile?.full_name?.[0] || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <p className="font-semibold">{topic.profile?.full_name || 'Usuário'}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {topic.community?.name || 'Comunidade'}
+                                  </p>
+                                </div>
+                                {selectedStatus === 'pending' && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      onClick={() => approveMutation.mutate(topic.id)}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Aprovar
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button size="sm" variant="destructive">
+                                          <XCircle className="h-4 w-4 mr-1" />
+                                          Rejeitar
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Rejeitar Tópico?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Este tópico será rejeitado e o autor será notificado.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            onClick={() => rejectMutation.mutate(topic.id)}
+                                          >
+                                            Rejeitar
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                )}
+                              </div>
+
+                              <h3 className="font-bold text-lg mb-2">{topic.title}</h3>
+                              <p className="text-muted-foreground line-clamp-3 mb-4">
+                                {topic.content}
+                              </p>
+
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Eye className="h-4 w-4" />
+                                  {topic.views_count}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <MessageSquare className="h-4 w-4" />
+                                  {topic.replies_count}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : moderationType === 'posts' && moderationPosts && moderationPosts.length > 0 ? (
+                    moderationPosts.map((post) => (
+                      <Card key={post.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage src={post.profile?.avatar_url} />
+                              <AvatarFallback>
+                                {post.profile?.full_name?.[0] || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <p className="font-semibold">{post.profile?.full_name || 'Usuário'}</p>
+                                {selectedStatus === 'pending' && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      onClick={() => approveMutation.mutate(post.id)}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Aprovar
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button size="sm" variant="destructive">
+                                          <XCircle className="h-4 w-4 mr-1" />
+                                          Rejeitar
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Rejeitar Post?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Este post será rejeitado e o autor será notificado.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            onClick={() => rejectMutation.mutate(post.id)}
+                                          >
+                                            Rejeitar
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                )}
+                              </div>
+
+                              <p className="text-muted-foreground mb-4">{post.content}</p>
+                              {post.image_url && (
+                                <img src={post.image_url} alt="Post" className="rounded-lg max-w-sm mb-4" />
+                              )}
+
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span>{post.likes_count} curtidas</span>
+                                <span>{post.comments_count} comentários</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <Card>
+                      <CardContent className="p-12 text-center text-muted-foreground">
+                        Nenhum conteúdo {selectedStatus === 'pending' ? 'pendente' : selectedStatus === 'approved' ? 'aprovado' : 'rejeitado'} no momento.
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
         </TabsContent>
 
         {/* ABA 4: MEMBROS */}

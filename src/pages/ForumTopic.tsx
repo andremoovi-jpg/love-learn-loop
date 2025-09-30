@@ -344,7 +344,7 @@ export default function ForumTopic() {
       <div className="flex min-h-screen w-full">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <TopBar hasSidebar={false} />
+          <TopBar hasSidebar={true} />
           <main className="flex-1 p-6">
             <div className="flex items-center justify-center h-64">
               <div className="text-center space-y-4">
@@ -364,7 +364,7 @@ export default function ForumTopic() {
     <div className="flex min-h-screen w-full">
       <Sidebar />
       <div className="flex-1 flex flex-col">
-        <TopBar hasSidebar={false} />
+        <TopBar hasSidebar={true} />
         <main className="flex-1 p-6 space-y-6">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
