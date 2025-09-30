@@ -164,6 +164,208 @@ export type Database = {
         }
         Relationships: []
       }
+      communities: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean | null
+          member_count: number | null
+          name: string
+          post_count: number | null
+          product_id: string | null
+          settings: Json | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          member_count?: number | null
+          name: string
+          post_count?: number | null
+          product_id?: string | null
+          settings?: Json | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          member_count?: number | null
+          name?: string
+          post_count?: number | null
+          product_id?: string | null
+          settings?: Json | null
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_badges: {
+        Row: {
+          auto_award: boolean | null
+          color: string | null
+          criteria: Json
+          description: string | null
+          icon_url: string | null
+          id: string
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          auto_award?: boolean | null
+          color?: string | null
+          criteria: Json
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          auto_award?: boolean | null
+          color?: string | null
+          criteria?: Json
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      community_categories: {
+        Row: {
+          color: string | null
+          community_id: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_locked: boolean | null
+          name: string
+          slug: string
+          sort_order: number | null
+        }
+        Insert: {
+          color?: string | null
+          community_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_locked?: boolean | null
+          name: string
+          slug: string
+          sort_order?: number | null
+        }
+        Update: {
+          color?: string | null
+          community_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_locked?: boolean | null
+          name?: string
+          slug?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_categories_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_members: {
+        Row: {
+          badges: Json | null
+          ban_reason: string | null
+          banned_until: string | null
+          community_id: string | null
+          id: string
+          is_banned: boolean | null
+          joined_at: string | null
+          last_activity_at: string | null
+          posts_count: number | null
+          replies_count: number | null
+          reputation_points: number | null
+          role: string | null
+          solutions_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          badges?: Json | null
+          ban_reason?: string | null
+          banned_until?: string | null
+          community_id?: string | null
+          id?: string
+          is_banned?: boolean | null
+          joined_at?: string | null
+          last_activity_at?: string | null
+          posts_count?: number | null
+          replies_count?: number | null
+          reputation_points?: number | null
+          role?: string | null
+          solutions_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          badges?: Json | null
+          ban_reason?: string | null
+          banned_until?: string | null
+          community_id?: string | null
+          id?: string
+          is_banned?: boolean | null
+          joined_at?: string | null
+          last_activity_at?: string | null
+          posts_count?: number | null
+          replies_count?: number | null
+          reputation_points?: number | null
+          role?: string | null
+          solutions_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       community_posts: {
         Row: {
           comments_count: number | null
@@ -223,6 +425,348 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      forum_notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      forum_reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          reaction_type: string
+          reply_id: string | null
+          topic_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reaction_type: string
+          reply_id?: string | null
+          topic_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reaction_type?: string
+          reply_id?: string | null
+          topic_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_reactions_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_reactions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      forum_replies: {
+        Row: {
+          author_id: string | null
+          content: string
+          content_html: string | null
+          created_at: string | null
+          edited_at: string | null
+          edited_by: string | null
+          id: string
+          is_moderator_post: boolean | null
+          is_solution: boolean | null
+          likes_count: number | null
+          parent_reply_id: string | null
+          status: string | null
+          topic_id: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          content_html?: string | null
+          created_at?: string | null
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          is_moderator_post?: boolean | null
+          is_solution?: boolean | null
+          likes_count?: number | null
+          parent_reply_id?: string | null
+          status?: string | null
+          topic_id?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          content_html?: string | null
+          created_at?: string | null
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          is_moderator_post?: boolean | null
+          is_solution?: boolean | null
+          likes_count?: number | null
+          parent_reply_id?: string | null
+          status?: string | null
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forum_replies_edited_by_fkey"
+            columns: ["edited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forum_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_replies_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_reports: {
+        Row: {
+          action_taken: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          reason: string
+          reply_id: string | null
+          reporter_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          topic_id: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reason: string
+          reply_id?: string | null
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          topic_id?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reason?: string
+          reply_id?: string | null
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_reports_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forum_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forum_reports_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_topics: {
+        Row: {
+          author_id: string | null
+          category_id: string | null
+          community_id: string | null
+          content: string
+          content_html: string | null
+          created_at: string | null
+          id: string
+          is_locked: boolean | null
+          is_pinned: boolean | null
+          is_solved: boolean | null
+          last_reply_at: string | null
+          last_reply_by: string | null
+          likes_count: number | null
+          replies_count: number | null
+          slug: string | null
+          solved_reply_id: string | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          category_id?: string | null
+          community_id?: string | null
+          content: string
+          content_html?: string | null
+          created_at?: string | null
+          id?: string
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          is_solved?: boolean | null
+          last_reply_at?: string | null
+          last_reply_by?: string | null
+          likes_count?: number | null
+          replies_count?: number | null
+          slug?: string | null
+          solved_reply_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          category_id?: string | null
+          community_id?: string | null
+          content?: string
+          content_html?: string | null
+          created_at?: string | null
+          id?: string
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          is_solved?: boolean | null
+          last_reply_at?: string | null
+          last_reply_by?: string | null
+          likes_count?: number | null
+          replies_count?: number | null
+          slug?: string | null
+          solved_reply_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_topics_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forum_topics_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "community_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_topics_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_topics_last_reply_by_fkey"
+            columns: ["last_reply_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       leads: {
         Row: {

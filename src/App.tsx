@@ -23,6 +23,8 @@ import AdminProdutos from "./pages/admin/AdminProdutos";
 import AdminUpsells from "./pages/admin/AdminUpsells";
 import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminWebhooks from "./pages/admin/AdminWebhooks";
+import ComunidadeForum from "./pages/ComunidadeForum";
+import NovoTopico from "./pages/NovoTopico";
 
 const queryClient = new QueryClient();
 
@@ -121,6 +123,18 @@ const App = () => (
                 <AdminRoute>
                   <AdminWebhooks />
                 </AdminRoute>
+              </ProtectedRoute>
+            } />
+            
+            {/* Forum Routes */}
+            <Route path="/comunidade/:slug" element={
+              <ProtectedRoute>
+                <ComunidadeForum />
+              </ProtectedRoute>
+            } />
+            <Route path="/comunidade/:slug/novo-topico" element={
+              <ProtectedRoute>
+                <NovoTopico />
               </ProtectedRoute>
             } />
             

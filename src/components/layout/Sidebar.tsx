@@ -14,18 +14,28 @@ import {
   Package,
   TrendingUp,
   BarChart3,
-  Webhook
+  Webhook,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
+import { supabase } from "@/integrations/supabase/client";
+
+interface UserCommunity {
+  id: string;
+  name: string;
+  slug: string;
+  icon_url?: string;
+}
 
 export function Sidebar() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [userCommunities, setUserCommunities] = useState<UserCommunity[]>([]);
   
   const navigation = [
     { name: t('navigation.dashboard'), href: "/dashboard", icon: Home },
@@ -48,6 +58,38 @@ export function Sidebar() {
   // FORCE admin for specific email
   const isAdmin = user?.is_admin || user?.email === 'mooviturmalina@gmail.com';
   
+  // Load user communities
+  useEffect(() => {
+    if (user) {
+      loadUserCommunities();
+    }
+  }, [user]);
+
+  const loadUserCommunities = async () => {
+    if (!user?.id) return;
+    
+    try {
+      // First get user's product IDs
+      const { data: userProducts } = await supabase
+        .from('user_products')
+        .select('product_id')
+        .eq('user_id', user.id);
+      
+      const productIds = userProducts?.map(up => up.product_id) || [];
+      
+      if (productIds.length > 0) {
+        const { data } = await supabase
+          .from('communities')
+          .select('id, name, slug, icon_url')
+          .in('product_id', productIds);
+        
+        setUserCommunities(data || []);
+      }
+    } catch (error) {
+      console.error('Error loading user communities:', error);
+    }
+  };
+
   // Debug: Log user admin status
   console.log('🔍 Sidebar - User admin status:', {
     hasUser: !!user,
@@ -107,6 +149,33 @@ export function Sidebar() {
             {item.name}
           </NavLink>
         ))}
+
+        {userCommunities.length > 0 && (
+          <>
+            <div className="pt-4 pb-2">
+              <div className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+                {t('sidebar.communities') || 'Suas Comunidades'}
+              </div>
+            </div>
+            {userCommunities.map((community) => (
+              <NavLink
+                key={community.id}
+                to={`/comunidade/${community.slug}`}
+                className={({ isActive }) =>
+                  `flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-base ${
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-soft"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  }`
+                }
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <MessageSquare className="mr-3 h-5 w-5 flex-shrink-0" />
+                <span className="truncate">{community.name}</span>
+              </NavLink>
+            ))}
+          </>
+        )}
 
         {isAdmin && (
           <>
