@@ -1483,6 +1483,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      user_can_receive_community_notification: {
+        Args: { p_community_id: string; p_user_id: string }
+        Returns: boolean
+      }
       user_has_purchased_product: {
         Args: { product_id: string }
         Returns: boolean
