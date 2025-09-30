@@ -128,19 +128,23 @@ export default function ForumTopic() {
         return;
       }
 
-      // Load author profile using public function
-      const { data: authorData } = await supabase
-        .rpc("get_public_profiles_community")
-        .eq("id", topicData.author_id)
-        .single();
+      // Load all public profiles
+      const { data: publicProfiles } = await supabase
+        .rpc("get_community_profiles");
+
+      const profilesMap = new Map(
+        publicProfiles?.map(p => [p.id, p]) || []
+      );
+      
+      const authorProfile = profilesMap.get(topicData.author_id);
 
       setTopic({
         ...topicData,
-        author: authorData ? {
-          id: authorData.id,
+        author: authorProfile ? {
+          id: authorProfile.id,
           user_id: topicData.author_id,
-          full_name: authorData.full_name,
-          avatar_url: authorData.avatar_url
+          full_name: authorProfile.full_name,
+          avatar_url: authorProfile.avatar_url
         } : { id: '', user_id: topicData.author_id, full_name: 'Usuário', avatar_url: null }
       } as unknown as Topic);
 
@@ -169,9 +173,8 @@ export default function ForumTopic() {
 
       // Load authors for all replies using public function
       if (repliesData && repliesData.length > 0) {
-        const profileIds = [...new Set(repliesData.map(r => r.author_id))];
         const { data: publicProfiles } = await supabase
-          .rpc("get_public_profiles_community");
+          .rpc("get_community_profiles");
 
         const profilesMap = new Map(
           publicProfiles?.map(p => [p.id, p]) || []
@@ -264,7 +267,7 @@ export default function ForumTopic() {
 
       // Load author profile for new reply using public function
       const { data: publicProfiles } = await supabase
-        .rpc("get_public_profiles_community");
+        .rpc("get_community_profiles");
       
       // Find profile by user_id (since user.id is the user_id in profiles table)
       const { data: profileData } = await supabase

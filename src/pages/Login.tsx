@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import { useTranslation } from 'react-i18next';
 
 export default function Login() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -92,8 +91,6 @@ export default function Login() {
           title: t('common.success'),
           description: t('login.success.loginSuccess'),
         });
-        // Redirect to dashboard after successful login
-        navigate('/dashboard');
       }
     } catch (error: any) {
       toast({
