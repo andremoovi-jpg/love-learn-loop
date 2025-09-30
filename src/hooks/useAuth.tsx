@@ -221,6 +221,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
+      // Force immediate redirect after successful login
+      toast.success(t('auth.loginSuccess'));
+      navigate('/dashboard');
+      
       return { error: null };
     } catch (error) {
       console.error('❌ Erro no signIn:', error);
