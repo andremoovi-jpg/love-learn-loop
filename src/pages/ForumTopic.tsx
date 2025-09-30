@@ -358,13 +358,20 @@ export default function ForumTopic() {
               {topic.community.name}
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span
-              className="inline-flex items-center gap-1"
-              style={{ color: topic.category.color }}
-            >
-              <span>{topic.category.icon}</span>
-              {topic.category.name}
-            </span>
+            {topic.category ? (
+              <span
+                className="inline-flex items-center gap-1"
+                style={{ color: topic.category.color }}
+              >
+                <span>{topic.category.icon}</span>
+                {topic.category.name}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <span>📝</span>
+                Geral
+              </span>
+            )}
             <ChevronRight className="w-4 h-4" />
             <span className="text-foreground">{topic.title}</span>
           </div>
