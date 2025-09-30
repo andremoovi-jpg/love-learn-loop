@@ -229,8 +229,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      // Clear state immediately
+      setUser(null);
+      setSession(null);
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast.error(t('auth.loginError'));
+        return;
+      }
+      
+      // Force redirect to login
+      navigate('/login');
+      toast.success('Logout realizado com sucesso');
+    } catch (error) {
+      console.error('Error signing out:', error);
       toast.error(t('auth.loginError'));
     }
   };
