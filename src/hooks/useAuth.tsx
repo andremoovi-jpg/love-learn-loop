@@ -157,21 +157,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(basicUser);
 
-        // Defer Supabase calls with setTimeout to avoid deadlock
-        setTimeout(async () => {
-          const profileData = await loadUserProfile(session.user.id);
+        // ✅ Atualizar perfil de forma assíncrona sem setTimeout
+        (async () => {
+          try {
+            const profileData = await loadUserProfile(session.user.id);
 
-          const enrichedUser: User = {
-            ...session.user,
-            full_name: profileData?.full_name || session.user.user_metadata?.full_name || 'Usuário',
-            avatar_url: profileData?.avatar_url,
-            phone: profileData?.phone,
-            total_points: profileData?.total_points || 0,
-            is_admin: profileData?.is_admin || false
-          };
+            const enrichedUser: User = {
+              ...session.user,
+              full_name: profileData?.full_name || session.user.user_metadata?.full_name || 'Usuário',
+              avatar_url: profileData?.avatar_url,
+              phone: profileData?.phone,
+              total_points: profileData?.total_points || 0,
+              is_admin: profileData?.is_admin || false
+            };
 
-          setUser(enrichedUser);
-        }, 0);
+            setUser(enrichedUser);
+          } catch (error) {
+            console.error('Error loading profile in auth change:', error);
+          }
+        })();
       } else {
         setUser(null);
       }
