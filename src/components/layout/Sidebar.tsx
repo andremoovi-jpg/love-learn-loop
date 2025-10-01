@@ -15,7 +15,8 @@ import {
   TrendingUp,
   BarChart3,
   Webhook,
-  MessageSquare
+  MessageSquare,
+  Plug
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,6 +54,7 @@ export function Sidebar() {
     { name: t('admin.products'), href: "/admin/produtos", icon: Package },
     { name: t('admin.upsells'), href: "/admin/upsells", icon: TrendingUp },
     { name: t('admin.reports'), href: "/admin/relatorios", icon: BarChart3 },
+    { name: "Integrações", href: "/admin/integracoes", icon: Plug },
     { name: t('admin.webhooks'), href: "/admin/webhooks", icon: Webhook },
     { name: "Comunidades", href: "/admin/comunidades", icon: MessageSquare },
   ];
