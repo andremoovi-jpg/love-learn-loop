@@ -217,13 +217,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        toast.error(t('login.errors.wrongCredentials'));
-        throw error;
+        return { error };
       }
-
-      // Force immediate redirect after successful login
-      toast.success(t('auth.loginSuccess'));
-      navigate('/dashboard');
       
       return { error: null };
     } catch (error) {
