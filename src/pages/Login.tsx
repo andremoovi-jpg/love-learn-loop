@@ -92,10 +92,6 @@ export default function Login() {
           title: t('common.success'),
           description: t('login.success.loginSuccess'),
         });
-        // Redirect immediately after successful login
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 100);
       }
     } catch (error: any) {
       toast({

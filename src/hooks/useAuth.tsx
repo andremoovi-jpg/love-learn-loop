@@ -172,10 +172,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           setUser(enrichedUser);
         }, 0);
-
-        if (event === 'SIGNED_IN') {
-          navigate('/dashboard');
-        }
       } else {
         setUser(null);
       }
