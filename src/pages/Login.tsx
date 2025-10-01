@@ -94,10 +94,8 @@ export default function Login() {
           description: t('login.success.loginSuccess'),
         });
         
-        // ✅ NAVEGAÇÃO EXPLÍCITA APÓS LOGIN SUCESSO
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 500);
+        // ✅ User já foi atualizado pelo signIn, o <Navigate> fará o redirecionamento
+        // Não precisa de navigate() manual nem setTimeout
       }
     } catch (error: any) {
       toast({

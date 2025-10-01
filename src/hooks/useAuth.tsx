@@ -138,26 +138,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Auth state change listener - CRITICAL: No async Supabase calls inside callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔄 Auth State Change:', { event, hasSession: !!session, hasUser: !!session?.user });
-      setSession(session);
-
+      
       if (event === 'SIGNED_OUT') {
         console.log('👋 User signed out, redirecting to login');
         setUser(null);
+        setSession(null);
         navigate('/login');
       } else if (session?.user) {
-        // Set basic user first (synchronous)
-        const basicUser: User = {
-          ...session.user,
-          full_name: session.user.user_metadata?.full_name || 'Usuário',
-          avatar_url: undefined,
-          phone: undefined,
-          total_points: 0,
-          is_admin: false
-        };
-
-        setUser(basicUser);
-
-        // ✅ Atualizar perfil de forma assíncrona sem setTimeout
+        // Apenas atualizar user em eventos que NÃO sejam de login inicial
+        // (TOKEN_REFRESHED, USER_UPDATED, etc)
+        console.log('🔄 Updating user from auth state change:', event);
+        setSession(session);
+        
         (async () => {
           try {
             const profileData = await loadUserProfile(session.user.id);
@@ -178,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })();
       } else {
         setUser(null);
+        setSession(null);
       }
     });
 
@@ -211,13 +204,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('🔐 SignIn: Starting login...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
+        console.error('❌ SignIn: Login failed', error);
         return { error };
+      }
+
+      if (data?.session?.user) {
+        console.log('✅ SignIn: Login successful, loading profile...');
+        
+        // ✅ ATUALIZAR USER IMEDIATAMENTE (não esperar o onAuthStateChange)
+        const profileData = await loadUserProfile(data.session.user.id);
+
+        const enrichedUser: User = {
+          ...data.session.user,
+          full_name: profileData?.full_name || data.session.user.user_metadata?.full_name || 'Usuário',
+          avatar_url: profileData?.avatar_url,
+          phone: profileData?.phone,
+          total_points: profileData?.total_points || 0,
+          is_admin: profileData?.is_admin || false
+        };
+
+        console.log('✅ SignIn: Setting user immediately', { is_admin: enrichedUser.is_admin });
+        setUser(enrichedUser);
+        setSession(data.session);
       }
       
       return { error: null };
