@@ -87,11 +87,17 @@ export default function Login() {
             variant: "destructive",
           });
         }
+        setLoading(false);
       } else {
         toast({
           title: t('common.success'),
           description: t('login.success.loginSuccess'),
         });
+        
+        // ✅ NAVEGAÇÃO EXPLÍCITA APÓS LOGIN SUCESSO
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 500);
       }
     } catch (error: any) {
       toast({
@@ -99,7 +105,6 @@ export default function Login() {
         description: t('login.errors.unexpectedError'),
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
