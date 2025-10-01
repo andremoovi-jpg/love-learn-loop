@@ -147,12 +147,13 @@ export default function AdminIntegracoes() {
       );
 
       setIntegrations(integrationsWithStats);
-    } catch (error: any) {
-      console.error("Erro ao carregar integrações:", error);
-      toast.error("Erro ao carregar integrações");
-    } finally {
-      setLoading(false);
-    }
+      } catch (error: any) {
+        console.error("Erro ao carregar integrações:", error);
+        const errorMessage = error?.message || "Erro ao carregar integrações";
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
   };
 
   // Abrir dialog para adicionar
@@ -227,10 +228,12 @@ export default function AdminIntegracoes() {
 
       setDialogOpen(false);
       loadIntegrations();
-    } catch (error: any) {
-      console.error("Erro ao salvar:", error);
-      toast.error("Erro ao salvar integração");
-    }
+      } catch (error: any) {
+        console.error("Erro ao salvar:", error);
+        // Mostrar erro detalhado do Supabase
+        const errorMessage = error?.message || "Erro ao salvar integração";
+        toast.error(errorMessage);
+      }
   };
 
   // Deletar integração
@@ -249,10 +252,11 @@ export default function AdminIntegracoes() {
       setDeleteDialogOpen(false);
       setIntegrationToDelete(null);
       loadIntegrations();
-    } catch (error: any) {
-      console.error("Erro ao deletar:", error);
-      toast.error("Erro ao deletar integração");
-    }
+      } catch (error: any) {
+        console.error("Erro ao deletar:", error);
+        const errorMessage = error?.message || "Erro ao deletar integração";
+        toast.error(errorMessage);
+      }
   };
 
   // Copiar webhook URL
@@ -275,10 +279,11 @@ export default function AdminIntegracoes() {
         integration.is_active ? "Integração desativada" : "Integração ativada"
       );
       loadIntegrations();
-    } catch (error: any) {
-      console.error("Erro ao alterar status:", error);
-      toast.error("Erro ao alterar status");
-    }
+      } catch (error: any) {
+        console.error("Erro ao alterar status:", error);
+        const errorMessage = error?.message || "Erro ao alterar status";
+        toast.error(errorMessage);
+      }
   };
 
   return (
