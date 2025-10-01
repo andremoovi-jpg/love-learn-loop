@@ -164,6 +164,200 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_sends: {
+        Row: {
+          bounced_at: string | null
+          campaign_id: string
+          channel: string
+          click_count: number | null
+          clicked_at: string | null
+          created_at: string | null
+          delivered_at: string | null
+          error_code: string | null
+          error_details: Json | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          message_content: string | null
+          message_subject: string | null
+          metadata: Json | null
+          n8n_message_id: string | null
+          open_count: number | null
+          opened_at: string | null
+          provider_message_id: string | null
+          recipient: string
+          sent_at: string | null
+          status: string
+          tracking_code: string | null
+          user_id: string
+        }
+        Insert: {
+          bounced_at?: string | null
+          campaign_id: string
+          channel: string
+          click_count?: number | null
+          clicked_at?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_code?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          message_content?: string | null
+          message_subject?: string | null
+          metadata?: Json | null
+          n8n_message_id?: string | null
+          open_count?: number | null
+          opened_at?: string | null
+          provider_message_id?: string | null
+          recipient: string
+          sent_at?: string | null
+          status?: string
+          tracking_code?: string | null
+          user_id: string
+        }
+        Update: {
+          bounced_at?: string | null
+          campaign_id?: string
+          channel?: string
+          click_count?: number | null
+          clicked_at?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_code?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          message_content?: string | null
+          message_subject?: string | null
+          metadata?: Json | null
+          n8n_message_id?: string | null
+          open_count?: number | null
+          opened_at?: string | null
+          provider_message_id?: string | null
+          recipient?: string
+          sent_at?: string | null
+          status?: string
+          tracking_code?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_sends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          actual_cost: number | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          email_subject: string | null
+          email_template: string | null
+          estimated_cost: number | null
+          filters: Json
+          id: string
+          n8n_execution_id: string | null
+          n8n_workflow_id: string | null
+          name: string
+          paused_at: string | null
+          scheduled_for: string | null
+          started_at: string | null
+          status: string
+          total_clicked: number | null
+          total_delivered: number | null
+          total_failed: number | null
+          total_opened: number | null
+          total_recipients: number | null
+          total_sent: number | null
+          type: string
+          updated_at: string | null
+          variables: Json | null
+          whatsapp_template: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          email_subject?: string | null
+          email_template?: string | null
+          estimated_cost?: number | null
+          filters?: Json
+          id?: string
+          n8n_execution_id?: string | null
+          n8n_workflow_id?: string | null
+          name: string
+          paused_at?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          total_clicked?: number | null
+          total_delivered?: number | null
+          total_failed?: number | null
+          total_opened?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+          type: string
+          updated_at?: string | null
+          variables?: Json | null
+          whatsapp_template?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          email_subject?: string | null
+          email_template?: string | null
+          estimated_cost?: number | null
+          filters?: Json
+          id?: string
+          n8n_execution_id?: string | null
+          n8n_workflow_id?: string | null
+          name?: string
+          paused_at?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          total_clicked?: number | null
+          total_delivered?: number | null
+          total_failed?: number | null
+          total_opened?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+          type?: string
+          updated_at?: string | null
+          variables?: Json | null
+          whatsapp_template?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communities: {
         Row: {
           cover_image_url: string | null
@@ -906,6 +1100,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_integrations: {
+        Row: {
+          api_key: string | null
+          api_token: string | null
+          config: Json | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_webhook_at: string | null
+          name: string
+          platform_type: string
+          updated_at: string | null
+          webhook_secret: string | null
+          webhook_url: string
+        }
+        Insert: {
+          api_key?: string | null
+          api_token?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_webhook_at?: string | null
+          name: string
+          platform_type: string
+          updated_at?: string | null
+          webhook_secret?: string | null
+          webhook_url: string
+        }
+        Update: {
+          api_key?: string | null
+          api_token?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_webhook_at?: string | null
+          name?: string
+          platform_type?: string
+          updated_at?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           content: string
@@ -963,6 +1202,54 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_mappings: {
+        Row: {
+          auto_grant_access: boolean | null
+          created_at: string | null
+          external_product_id: string
+          external_product_name: string | null
+          id: string
+          integration_id: string
+          product_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_grant_access?: boolean | null
+          created_at?: string | null
+          external_product_id: string
+          external_product_name?: string | null
+          id?: string
+          integration_id: string
+          product_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_grant_access?: boolean | null
+          created_at?: string | null
+          external_product_id?: string
+          external_product_name?: string | null
+          id?: string
+          integration_id?: string
+          product_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_mappings_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "payment_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_mappings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -1236,6 +1523,78 @@ export type Database = {
             columns: ["upsell_id"]
             isOneToOne: false
             referencedRelation: "upsells"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_events: {
+        Row: {
+          created_at: string | null
+          error_details: Json | null
+          error_message: string | null
+          event_type: string
+          id: string
+          integration_id: string | null
+          ip_address: unknown | null
+          normalized_payload: Json | null
+          order_id: string | null
+          processed: boolean | null
+          processed_at: string | null
+          processing_attempts: number | null
+          product_ids: string[] | null
+          raw_payload: Json
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          integration_id?: string | null
+          ip_address?: unknown | null
+          normalized_payload?: Json | null
+          order_id?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processing_attempts?: number | null
+          product_ids?: string[] | null
+          raw_payload: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          integration_id?: string | null
+          ip_address?: unknown | null
+          normalized_payload?: Json | null
+          order_id?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processing_attempts?: number | null
+          product_ids?: string[] | null
+          raw_payload?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_events_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "payment_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
