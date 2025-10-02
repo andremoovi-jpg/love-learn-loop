@@ -169,8 +169,8 @@ export default function AdminCampanhas() {
     if (!campaignToExecute) return;
 
     try {
-      // Update status to "sending"
-      const { error } = await supabase
+      // 1. Atualizar status da campanha para "sending"
+      const { error: updateError } = await supabase
         .from("campaigns")
         .update({
           status: "sending",
@@ -178,22 +178,71 @@ export default function AdminCampanhas() {
         })
         .eq("id", campaignToExecute.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      toast.success("Campanha iniciada! O n8n está processando os envios.");
+      // 2. Buscar URL do webhook n8n configurado
+      const { data: webhookConfig, error: configError } = await supabase
+        .from("system_settings")
+        .select("setting_value")
+        .eq("setting_key", "n8n_webhooks")
+        .single();
 
-      // TODO: Call n8n webhook in the future
-      // await fetch('https://n8n.seudominio.com/webhook/execute-campaign', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ campaign_id: campaignToExecute.id })
-      // });
+      if (configError) {
+        console.error("Erro ao buscar configuração n8n:", configError);
+        toast.error("Webhook do n8n não configurado. Vá em Configurações > n8n");
+        
+        // Reverter status
+        await supabase
+          .from("campaigns")
+          .update({ status: "scheduled" })
+          .eq("id", campaignToExecute.id);
+        return;
+      }
 
+      // 3. Extrair URL do webhook execute_campaign
+      const webhooks = webhookConfig?.setting_value as any;
+      const n8nUrl = webhooks?.execute_campaign;
+
+      if (!n8nUrl) {
+        toast.error("Webhook 'execute_campaign' não configurado. Configure em Configurações > n8n");
+        
+        // Reverter status
+        await supabase
+          .from("campaigns")
+          .update({ status: "scheduled" })
+          .eq("id", campaignToExecute.id);
+        return;
+      }
+
+      // 4. Chamar webhook do n8n para executar a campanha
+      const n8nResponse = await fetch(n8nUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          campaign_id: campaignToExecute.id
+        })
+      });
+
+      if (!n8nResponse.ok) {
+        throw new Error(`Erro ao chamar n8n: ${n8nResponse.status} ${n8nResponse.statusText}`);
+      }
+
+      toast.success("Campanha enviada para processamento com sucesso!");
       setExecuteDialogOpen(false);
       setCampaignToExecute(null);
       loadCampaigns();
+
     } catch (error: any) {
-      console.error("Erro ao executar campanha:", error);
-      toast.error("Erro ao executar campanha");
+      console.error("Error executing campaign:", error);
+      toast.error(error.message || "Erro ao executar campanha");
+
+      // Reverter status se houve erro
+      await supabase
+        .from("campaigns")
+        .update({ status: "scheduled" })
+        .eq("id", campaignToExecute.id);
     }
   };
 
