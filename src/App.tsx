@@ -28,6 +28,7 @@ import AdminComunidades from "./pages/admin/AdminComunidades";
 import AdminPosts from "./pages/admin/AdminPosts";
 import AdminIntegracoes from "./pages/admin/AdminIntegracoes";
 import AdminIntegracaoDetalhes from "./pages/admin/AdminIntegracaoDetalhes";
+import AdminCampanhas from "./pages/admin/AdminCampanhas";
 import ComunidadeForum from "./pages/ComunidadeForum";
 import NovoTopico from "./pages/NovoTopico";
 import ForumTopic from "./pages/ForumTopic";
@@ -161,6 +162,13 @@ const App = () => (
               <ProtectedRoute>
                 <AdminRoute>
                   <AdminIntegracaoDetalhes />
+                </AdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/campanhas" element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminCampanhas />
                 </AdminRoute>
               </ProtectedRoute>
             } />
