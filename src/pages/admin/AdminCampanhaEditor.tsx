@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, RefreshCw, Save, CheckCircle, MessageCircle, Paperclip, X, FileText, Image, Video, Mic } from "lucide-react";
+import { ArrowLeft, Users, RefreshCw, Save, CheckCircle, MessageCircle, Paperclip, X, FileText, Image, Video, Mic, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Tipos
 interface Campaign {
@@ -1012,50 +1013,79 @@ export default function AdminCampanhaEditor() {
                   <div className="space-y-3 pt-4 border-t">
                     <Label>Tipo de Mensagem</Label>
 
+                    {/* Alert de aviso sobre limitação do WhatsApp */}
+                    <Alert className="mb-4">
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>Importante:</strong> O WhatsApp permite enviar apenas <strong>1 mídia por mensagem</strong>
+                        {" "}(imagem OU vídeo OU áudio OU documento). Não é possível enviar múltiplas mídias na mesma mensagem.
+                      </AlertDescription>
+                    </Alert>
+
                     <RadioGroup
                       value={whatsappMediaType}
                       onValueChange={(value) => {
-                        setWhatsappMediaType(value as WhatsAppMediaType);
-                        if (value !== whatsappMediaType && whatsappMediaUrl) {
+                        // Se já tem mídia carregada, avisar antes de mudar
+                        if (whatsappMediaUrl && value !== whatsappMediaType) {
+                          const confirmChange = window.confirm(
+                            `Atenção: Ao mudar o tipo de mídia, o arquivo atual (${whatsappMediaType}) será removido. Deseja continuar?`
+                          );
+
+                          if (!confirmChange) return;
+
+                          // Remover mídia anterior
                           removeWhatsappMedia();
                         }
+
+                        setWhatsappMediaType(value as WhatsAppMediaType);
                       }}
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="text" id="wa-text" />
                         <Label htmlFor="wa-text" className="font-normal">
-                          Apenas Texto
+                          📝 Apenas Texto (sem mídia)
                         </Label>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="image" id="wa-image" />
                         <Label htmlFor="wa-image" className="font-normal">
-                          Texto + Imagem (máx 5MB)
+                          🖼️ Texto + 1 Imagem (JPG/PNG - máx 5MB)
                         </Label>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="video" id="wa-video" />
                         <Label htmlFor="wa-video" className="font-normal">
-                          Texto + Vídeo (máx 16MB)
+                          🎥 Texto + 1 Vídeo (MP4 - máx 16MB)
                         </Label>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="audio" id="wa-audio" />
                         <Label htmlFor="wa-audio" className="font-normal">
-                          Áudio (máx 16MB)
+                          🎵 1 Áudio (MP3/OGG - máx 16MB - sem texto)
                         </Label>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="document" id="wa-document" />
                         <Label htmlFor="wa-document" className="font-normal">
-                          Documento PDF/DOC (máx 100MB)
+                          📄 Texto + 1 Documento (PDF/DOC - máx 100MB)
                         </Label>
                       </div>
                     </RadioGroup>
+
+                    {/* Aviso específico para áudio */}
+                    {whatsappMediaType === 'audio' && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          <strong>Atenção:</strong> Mensagens de áudio NÃO exibem o texto do template.
+                          Apenas o áudio será enviado.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
 
                   {/* Upload de mídia - condicional */}
@@ -1135,11 +1165,6 @@ export default function AdminCampanhaEditor() {
                         </div>
                       )}
 
-                      {whatsappMediaType === 'audio' && (
-                        <p className="text-xs text-muted-foreground">
-                          ⚠️ Mensagens de áudio não exibem o texto do template (apenas o áudio é enviado)
-                        </p>
-                      )}
                     </div>
                   )}
                 </CardContent>
