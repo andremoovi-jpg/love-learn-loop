@@ -22,7 +22,6 @@ export default function AdminConfiguracoesN8n() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Estados
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [webhooks, setWebhooks] = useState<WebhookConfig>({
@@ -31,15 +30,13 @@ export default function AdminConfiguracoesN8n() {
     track_events: "",
   });
 
-  // Breadcrumbs
   const breadcrumbs = [
     { label: "Admin", href: "/admin" },
     { label: "Configurações n8n" },
   ];
 
-  // Carregar configurações
   useEffect(() => {
-    if (user?.is_admin) {
+    if (user) {
       loadSettings();
     }
   }, [user]);
@@ -52,19 +49,17 @@ export default function AdminConfiguracoesN8n() {
         .from("system_settings")
         .select("setting_value")
         .eq("setting_key", "n8n_webhooks")
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        // Se não existe, criar
-        if (error.code === "PGRST116") {
-          await createDefaultSettings();
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
-      if (data) {
-        setWebhooks(data.setting_value as unknown as WebhookConfig);
+      if (data && data.setting_value) {
+        const value = data.setting_value as any;
+        setWebhooks({
+          execute_campaign: value.execute_campaign || "",
+          process_purchase: value.process_purchase || "",
+          track_events: value.track_events || "",
+        });
       }
     } catch (error: any) {
       console.error("Erro ao carregar configurações:", error);
@@ -74,42 +69,12 @@ export default function AdminConfiguracoesN8n() {
     }
   };
 
-  const createDefaultSettings = async () => {
-    try {
-      const { error } = await supabase
-        .from("system_settings")
-        .insert({
-          setting_key: "n8n_webhooks",
-          setting_value: {
-            execute_campaign: "",
-            process_purchase: "",
-            track_events: "",
-          },
-          description: "URLs dos webhooks do n8n",
-        });
-
-      if (error) throw error;
-
-      setWebhooks({
-        execute_campaign: "",
-        process_purchase: "",
-        track_events: "",
-      });
-    } catch (error: any) {
-      console.error("Erro ao criar configurações:", error);
-      toast.error("Erro ao criar configurações padrão");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
     try {
       setSaving(true);
 
-      // Validação básica de URLs
       const validateUrl = (url: string) => {
-        if (!url) return true; // Opcional
+        if (!url) return true;
         try {
           new URL(url);
           return true;
@@ -133,14 +98,13 @@ export default function AdminConfiguracoesN8n() {
         return;
       }
 
-      // Salvar no banco
       const { error } = await supabase
         .from("system_settings")
-        .update({
+        .upsert({
+          setting_key: "n8n_webhooks",
           setting_value: webhooks as any,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("setting_key", "n8n_webhooks");
+          description: "URLs dos webhooks do n8n",
+        });
 
       if (error) throw error;
 
@@ -176,22 +140,11 @@ export default function AdminConfiguracoesN8n() {
     }
   };
 
-  if (!user?.is_admin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Acesso Negado</h1>
-          <p className="text-muted-foreground">Apenas administradores podem acessar esta página.</p>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Carregando configurações...</p>
         </div>
       </div>
@@ -207,7 +160,6 @@ export default function AdminConfiguracoesN8n() {
 
         <main className="p-6">
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Header */}
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -225,7 +177,6 @@ export default function AdminConfiguracoesN8n() {
               </div>
             </div>
 
-            {/* Instruções */}
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Como configurar</AlertTitle>
@@ -239,7 +190,6 @@ export default function AdminConfiguracoesN8n() {
               </AlertDescription>
             </Alert>
 
-            {/* Card de Configuração */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -251,7 +201,6 @@ export default function AdminConfiguracoesN8n() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Webhook 1: Executar Campanha */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="execute-campaign">
@@ -281,7 +230,6 @@ export default function AdminConfiguracoesN8n() {
                   </p>
                 </div>
 
-                {/* Webhook 2: Processar Compra */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="process-purchase">
@@ -311,7 +259,6 @@ export default function AdminConfiguracoesN8n() {
                   </p>
                 </div>
 
-                {/* Webhook 3: Tracking */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="track-events">
@@ -341,7 +288,6 @@ export default function AdminConfiguracoesN8n() {
                   </p>
                 </div>
 
-                {/* Botão Salvar */}
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={handleSave} disabled={saving}>
                     {saving ? (
@@ -360,7 +306,6 @@ export default function AdminConfiguracoesN8n() {
               </CardContent>
             </Card>
 
-            {/* Status */}
             {webhooks.execute_campaign && (
               <Alert>
                 <CheckCircle className="h-4 w-4 text-green-600" />
