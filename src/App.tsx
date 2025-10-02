@@ -31,6 +31,7 @@ import AdminIntegracaoDetalhes from "./pages/admin/AdminIntegracaoDetalhes";
 import AdminCampanhas from "./pages/admin/AdminCampanhas";
 import AdminCampanhaEditor from "./pages/admin/AdminCampanhaEditor";
 import AdminCampanhaDetalhes from "./pages/admin/AdminCampanhaDetalhes";
+import AdminConfiguracoesN8n from "./pages/admin/AdminConfiguracoesN8n";
 import ComunidadeForum from "./pages/ComunidadeForum";
 import NovoTopico from "./pages/NovoTopico";
 import ForumTopic from "./pages/ForumTopic";
@@ -185,6 +186,13 @@ const App = () => (
               <ProtectedRoute>
                 <AdminRoute>
                   <AdminCampanhaEditor />
+                </AdminRoute>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/configuracoes-n8n" element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminConfiguracoesN8n />
                 </AdminRoute>
               </ProtectedRoute>
             } />

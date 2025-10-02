@@ -57,6 +57,7 @@ export function Sidebar() {
     { name: t('admin.reports'), href: "/admin/relatorios", icon: BarChart3 },
     { name: "Integrações", href: "/admin/integracoes", icon: Plug },
     { name: "Campanhas", href: "/admin/campanhas", icon: Send },
+    { name: "Configurações n8n", href: "/admin/configuracoes-n8n", icon: Settings },
     { name: t('admin.webhooks'), href: "/admin/webhooks", icon: Webhook },
     { name: "Comunidades", href: "/admin/comunidades", icon: MessageSquare },
   ];
