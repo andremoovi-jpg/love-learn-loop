@@ -179,6 +179,7 @@ export type Database = {
           failed_at: string | null
           id: string
           message_content: string | null
+          message_id: string | null
           message_subject: string | null
           metadata: Json | null
           n8n_message_id: string | null
@@ -205,6 +206,7 @@ export type Database = {
           failed_at?: string | null
           id?: string
           message_content?: string | null
+          message_id?: string | null
           message_subject?: string | null
           metadata?: Json | null
           n8n_message_id?: string | null
@@ -231,6 +233,7 @@ export type Database = {
           failed_at?: string | null
           id?: string
           message_content?: string | null
+          message_id?: string | null
           message_subject?: string | null
           metadata?: Json | null
           n8n_message_id?: string | null
