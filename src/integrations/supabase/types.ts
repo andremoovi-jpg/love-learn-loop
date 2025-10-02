@@ -267,6 +267,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           description: string | null
+          email_attachments: Json | null
           email_subject: string | null
           email_template: string | null
           estimated_cost: number | null
@@ -288,6 +289,9 @@ export type Database = {
           type: string
           updated_at: string | null
           variables: Json | null
+          whatsapp_media_filename: string | null
+          whatsapp_media_type: string | null
+          whatsapp_media_url: string | null
           whatsapp_template: string | null
         }
         Insert: {
@@ -296,6 +300,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          email_attachments?: Json | null
           email_subject?: string | null
           email_template?: string | null
           estimated_cost?: number | null
@@ -317,6 +322,9 @@ export type Database = {
           type: string
           updated_at?: string | null
           variables?: Json | null
+          whatsapp_media_filename?: string | null
+          whatsapp_media_type?: string | null
+          whatsapp_media_url?: string | null
           whatsapp_template?: string | null
         }
         Update: {
@@ -325,6 +333,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          email_attachments?: Json | null
           email_subject?: string | null
           email_template?: string | null
           estimated_cost?: number | null
@@ -346,6 +355,9 @@ export type Database = {
           type?: string
           updated_at?: string | null
           variables?: Json | null
+          whatsapp_media_filename?: string | null
+          whatsapp_media_type?: string | null
+          whatsapp_media_url?: string | null
           whatsapp_template?: string | null
         }
         Relationships: [

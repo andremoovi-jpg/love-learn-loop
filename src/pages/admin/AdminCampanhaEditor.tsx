@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, RefreshCw, Save, CheckCircle, MessageCircle } from "lucide-react";
+import { ArrowLeft, Users, RefreshCw, Save, CheckCircle, MessageCircle, Paperclip, X, FileText, Image, Video, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,16 @@ interface PreviewUser {
   email: string;
 }
 
+interface EmailAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+}
+
+type WhatsAppMediaType = 'text' | 'image' | 'video' | 'audio' | 'document';
+
 export default function AdminCampanhaEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -87,6 +97,15 @@ export default function AdminCampanhaEditor() {
   const [emailSubject, setEmailSubject] = useState("");
   const [emailTemplate, setEmailTemplate] = useState("");
   const [whatsappTemplate, setWhatsappTemplate] = useState("");
+
+  // Estados para anexos de email
+  const [emailAttachments, setEmailAttachments] = useState<EmailAttachment[]>([]);
+
+  // Estados para mídia do WhatsApp
+  const [whatsappMediaType, setWhatsappMediaType] = useState<WhatsAppMediaType>('text');
+  const [whatsappMediaUrl, setWhatsappMediaUrl] = useState('');
+  const [whatsappMediaFilename, setWhatsappMediaFilename] = useState('');
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   // Breadcrumbs
   const breadcrumbs = [
@@ -142,6 +161,12 @@ export default function AdminCampanhaEditor() {
       setEmailSubject(campaignData.email_subject || "");
       setEmailTemplate(campaignData.email_template || "");
       setWhatsappTemplate(campaignData.whatsapp_template || "");
+
+      // Carregar anexos
+      setEmailAttachments((campaignData.email_attachments as unknown as EmailAttachment[]) || []);
+      setWhatsappMediaType((campaignData.whatsapp_media_type as WhatsAppMediaType) || 'text');
+      setWhatsappMediaUrl(campaignData.whatsapp_media_url || '');
+      setWhatsappMediaFilename(campaignData.whatsapp_media_filename || '');
 
       // Carregar produtos
       const { data: productsData, error: productsError } = await supabase
@@ -261,7 +286,11 @@ export default function AdminCampanhaEditor() {
           filters: filters as any,
           email_subject: type === "email" || type === "both" ? emailSubject.trim() : null,
           email_template: type === "email" || type === "both" ? emailTemplate.trim() : null,
+          email_attachments: emailAttachments as any,
           whatsapp_template: type === "whatsapp" || type === "both" ? whatsappTemplate.trim() : null,
+          whatsapp_media_type: whatsappMediaType,
+          whatsapp_media_url: whatsappMediaUrl || null,
+          whatsapp_media_filename: whatsappMediaFilename || null,
           total_recipients: totalRecipients,
           status: markAsScheduled ? "scheduled" : "draft",
           updated_at: new Date().toISOString(),
@@ -300,6 +329,181 @@ export default function AdminCampanhaEditor() {
           ? prev.filter(id => id !== productId)
           : [...prev, productId]
       );
+    }
+  };
+
+  // Upload de anexos de email
+  const handleEmailAttachmentUpload = async (files: FileList) => {
+    const maxFiles = 5;
+    const maxSizePerFile = 10 * 1024 * 1024; // 10MB
+
+    if (emailAttachments.length + files.length > maxFiles) {
+      toast.error(`Máximo de ${maxFiles} anexos por email`);
+      return;
+    }
+
+    setUploadingFile(true);
+
+    for (const file of Array.from(files)) {
+      try {
+        if (file.size > maxSizePerFile) {
+          toast.error(`${file.name}: arquivo muito grande (máx 10MB)`);
+          continue;
+        }
+
+        const allowedTypes = [
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'image/jpeg',
+          'image/png'
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+          toast.error(`${file.name}: tipo de arquivo não suportado`);
+          continue;
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('campaign-files')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          toast.error(`Erro ao fazer upload de ${file.name}`);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('campaign-files')
+          .getPublicUrl(fileName);
+
+        setEmailAttachments(prev => [...prev, {
+          id: fileName,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: publicUrl
+        }]);
+
+        toast.success(`${file.name} adicionado com sucesso`);
+      } catch (error) {
+        console.error('Erro no upload:', error);
+        toast.error(`Erro ao fazer upload de ${file.name}`);
+      }
+    }
+
+    setUploadingFile(false);
+  };
+
+  // Remover anexo de email
+  const removeEmailAttachment = async (attachmentId: string) => {
+    try {
+      const { error } = await supabase.storage
+        .from('campaign-files')
+        .remove([attachmentId]);
+
+      if (error) {
+        toast.error('Erro ao remover arquivo');
+        return;
+      }
+
+      setEmailAttachments(prev => prev.filter(att => att.id !== attachmentId));
+      toast.success('Arquivo removido');
+    } catch (error) {
+      console.error('Erro ao remover:', error);
+      toast.error('Erro ao remover arquivo');
+    }
+  };
+
+  // Upload de mídia do WhatsApp
+  const handleWhatsappMediaUpload = async (file: File, mediaType: WhatsAppMediaType) => {
+    const validations = {
+      image: {
+        maxSize: 5 * 1024 * 1024,
+        types: ['image/jpeg', 'image/png'],
+        label: 'Imagem'
+      },
+      video: {
+        maxSize: 16 * 1024 * 1024,
+        types: ['video/mp4'],
+        label: 'Vídeo'
+      },
+      audio: {
+        maxSize: 16 * 1024 * 1024,
+        types: ['audio/mpeg', 'audio/ogg'],
+        label: 'Áudio'
+      },
+      document: {
+        maxSize: 100 * 1024 * 1024,
+        types: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        label: 'Documento'
+      }
+    };
+
+    const validation = validations[mediaType];
+
+    if (file.size > validation.maxSize) {
+      toast.error(`${validation.label} muito grande (máx ${validation.maxSize / (1024*1024)}MB)`);
+      return;
+    }
+
+    if (!validation.types.includes(file.type)) {
+      toast.error(`Formato de ${validation.label.toLowerCase()} não suportado`);
+      return;
+    }
+
+    setUploadingFile(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('campaign-files')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        toast.error('Erro ao fazer upload');
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('campaign-files')
+        .getPublicUrl(fileName);
+
+      setWhatsappMediaUrl(publicUrl);
+      setWhatsappMediaFilename(file.name);
+
+      toast.success(`${validation.label} adicionado com sucesso`);
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao fazer upload');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  // Remover mídia do WhatsApp
+  const removeWhatsappMedia = async () => {
+    if (!whatsappMediaUrl) return;
+
+    try {
+      const urlParts = whatsappMediaUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+
+      await supabase.storage
+        .from('campaign-files')
+        .remove([fileName]);
+
+      setWhatsappMediaUrl('');
+      setWhatsappMediaFilename('');
+      toast.success('Mídia removida');
+    } catch (error) {
+      console.error('Erro ao remover:', error);
+      toast.error('Erro ao remover mídia');
     }
   };
 
@@ -686,6 +890,60 @@ export default function AdminCampanhaEditor() {
                       </div>
                     </div>
                   )}
+
+                  {/* Seção de anexos - NOVO */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <Label>Anexos (opcional)</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Adicione até 5 arquivos (PDF, DOC, JPG, PNG). Máximo: 10MB por arquivo.
+                    </p>
+
+                    <Input
+                      type="file"
+                      multiple
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          handleEmailAttachmentUpload(e.target.files);
+                        }
+                      }}
+                      disabled={uploadingFile || emailAttachments.length >= 5}
+                    />
+
+                    {/* Lista de anexos */}
+                    {emailAttachments.length > 0 && (
+                      <div className="space-y-2">
+                        {emailAttachments.map(att => (
+                          <div
+                            key={att.id}
+                            className="flex items-center gap-3 p-3 bg-muted rounded-lg"
+                          >
+                            <Paperclip className="w-4 h-4 text-muted-foreground" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{att.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(att.size / 1024).toFixed(0)} KB
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeEmailAttachment(att.id)}
+                              disabled={uploadingFile}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {uploadingFile && (
+                      <p className="text-sm text-muted-foreground">
+                        Fazendo upload...
+                      </p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -747,6 +1005,141 @@ export default function AdminCampanhaEditor() {
                           {whatsappTemplate.replace(/\{\{nome\}\}/g, "João Silva")}
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Tipo de mídia - NOVO */}
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label>Tipo de Mensagem</Label>
+
+                    <RadioGroup
+                      value={whatsappMediaType}
+                      onValueChange={(value) => {
+                        setWhatsappMediaType(value as WhatsAppMediaType);
+                        if (value !== whatsappMediaType && whatsappMediaUrl) {
+                          removeWhatsappMedia();
+                        }
+                      }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="text" id="wa-text" />
+                        <Label htmlFor="wa-text" className="font-normal">
+                          Apenas Texto
+                        </Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="image" id="wa-image" />
+                        <Label htmlFor="wa-image" className="font-normal">
+                          Texto + Imagem (máx 5MB)
+                        </Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="video" id="wa-video" />
+                        <Label htmlFor="wa-video" className="font-normal">
+                          Texto + Vídeo (máx 16MB)
+                        </Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="audio" id="wa-audio" />
+                        <Label htmlFor="wa-audio" className="font-normal">
+                          Áudio (máx 16MB)
+                        </Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="document" id="wa-document" />
+                        <Label htmlFor="wa-document" className="font-normal">
+                          Documento PDF/DOC (máx 100MB)
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Upload de mídia - condicional */}
+                  {whatsappMediaType !== 'text' && (
+                    <div className="space-y-3">
+                      <Label>
+                        Upload de {
+                          whatsappMediaType === 'image' ? 'Imagem' :
+                          whatsappMediaType === 'video' ? 'Vídeo' :
+                          whatsappMediaType === 'audio' ? 'Áudio' :
+                          'Documento'
+                        }
+                      </Label>
+
+                      <Input
+                        type="file"
+                        accept={
+                          whatsappMediaType === 'image' ? '.jpg,.jpeg,.png' :
+                          whatsappMediaType === 'video' ? '.mp4' :
+                          whatsappMediaType === 'audio' ? '.mp3,.ogg' :
+                          '.pdf,.doc,.docx'
+                        }
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleWhatsappMediaUpload(file, whatsappMediaType);
+                          }
+                        }}
+                        disabled={uploadingFile || !!whatsappMediaUrl}
+                      />
+
+                      {/* Preview da mídia */}
+                      {whatsappMediaUrl && (
+                        <div className="p-4 bg-muted rounded-lg space-y-3">
+                          {whatsappMediaType === 'image' && (
+                            <img
+                              src={whatsappMediaUrl}
+                              alt="Preview"
+                              className="max-w-xs rounded-lg"
+                            />
+                          )}
+
+                          {whatsappMediaType === 'video' && (
+                            <video
+                              src={whatsappMediaUrl}
+                              controls
+                              className="max-w-xs rounded-lg"
+                            />
+                          )}
+
+                          {whatsappMediaType === 'audio' && (
+                            <div className="flex items-center gap-2">
+                              <Mic className="w-5 h-5 text-muted-foreground" />
+                              <audio src={whatsappMediaUrl} controls className="flex-1" />
+                            </div>
+                          )}
+
+                          {whatsappMediaType === 'document' && (
+                            <div className="flex items-center gap-3">
+                              <FileText className="w-8 h-8 text-muted-foreground" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{whatsappMediaFilename}</p>
+                                <p className="text-xs text-muted-foreground">Documento anexado</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={removeWhatsappMedia}
+                            disabled={uploadingFile}
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Remover mídia
+                          </Button>
+                        </div>
+                      )}
+
+                      {whatsappMediaType === 'audio' && (
+                        <p className="text-xs text-muted-foreground">
+                          ⚠️ Mensagens de áudio não exibem o texto do template (apenas o áudio é enviado)
+                        </p>
+                      )}
                     </div>
                   )}
                 </CardContent>
