@@ -1634,6 +1634,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_campaign_recipients: {
+        Args: { campaign_filters: Json }
+        Returns: Json
+      }
       can_access_product: {
         Args: { product_id_param: string }
         Returns: boolean
