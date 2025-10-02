@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, RefreshCw, Save, CheckCircle } from "lucide-react";
+import { ArrowLeft, Users, RefreshCw, Save, CheckCircle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 
 // Tipos
 interface Campaign {
@@ -82,6 +83,11 @@ export default function AdminCampanhaEditor() {
   // Produtos disponíveis
   const [products, setProducts] = useState<Product[]>([]);
 
+  // Templates
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailTemplate, setEmailTemplate] = useState("");
+  const [whatsappTemplate, setWhatsappTemplate] = useState("");
+
   // Breadcrumbs
   const breadcrumbs = [
     { label: "Admin", href: "/admin" },
@@ -131,6 +137,11 @@ export default function AdminCampanhaEditor() {
         setUseUserStatus(true);
         setUserStatus(filters.user_status);
       }
+
+      // Carregar templates
+      setEmailSubject(campaignData.email_subject || "");
+      setEmailTemplate(campaignData.email_template || "");
+      setWhatsappTemplate(campaignData.whatsapp_template || "");
 
       // Carregar produtos
       const { data: productsData, error: productsError } = await supabase
@@ -199,6 +210,25 @@ export default function AdminCampanhaEditor() {
         return;
       }
 
+      // Validações de template
+      if (type === "email" || type === "both") {
+        if (!emailSubject.trim()) {
+          toast.error("Digite um assunto para o email");
+          return;
+        }
+        if (!emailTemplate.trim()) {
+          toast.error("Digite o corpo do email");
+          return;
+        }
+      }
+
+      if (type === "whatsapp" || type === "both") {
+        if (!whatsappTemplate.trim()) {
+          toast.error("Digite a mensagem do WhatsApp");
+          return;
+        }
+      }
+
       // Construir filtros
       const filters: CampaignFilters = {};
       if (useHasProducts && hasProducts.length > 0) {
@@ -229,6 +259,9 @@ export default function AdminCampanhaEditor() {
           name: name.trim(),
           type,
           filters: filters as any,
+          email_subject: type === "email" || type === "both" ? emailSubject.trim() : null,
+          email_template: type === "email" || type === "both" ? emailTemplate.trim() : null,
+          whatsapp_template: type === "whatsapp" || type === "both" ? whatsappTemplate.trim() : null,
           total_recipients: totalRecipients,
           status: markAsScheduled ? "scheduled" : "draft",
           updated_at: new Date().toISOString(),
@@ -581,6 +614,144 @@ export default function AdminCampanhaEditor() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Template de Email */}
+            {(type === "email" || type === "both") && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>📧 Template de Email</CardTitle>
+                  <CardDescription>
+                    Configure o assunto e o corpo do email que será enviado
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Assunto */}
+                  <div>
+                    <Label>Assunto do Email *</Label>
+                    <Input
+                      placeholder="Ex: Oferta Especial para Você!"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Corpo do Email */}
+                  <div>
+                    <Label>Corpo do Email *</Label>
+                    <Textarea
+                      placeholder={`Olá {{nome}},\n\nTemos uma oferta especial para você...\n\nAbraços,\nEquipe`}
+                      value={emailTemplate}
+                      onChange={(e) => setEmailTemplate(e.target.value)}
+                      rows={10}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {emailTemplate.length} caracteres
+                    </p>
+                  </div>
+
+                  {/* Variáveis disponíveis */}
+                  <div className="bg-muted p-4 rounded-lg">
+                    <p className="font-medium text-sm mb-2">💡 Variáveis disponíveis:</p>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <code className="bg-background px-2 py-1 rounded">{"{{nome}}"}</code>
+                        <span>- Nome completo do usuário</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="bg-background px-2 py-1 rounded">{"{{email}}"}</code>
+                        <span>- Email do usuário</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview */}
+                  {emailSubject && emailTemplate && (
+                    <div>
+                      <Label className="mb-2 block">👁️ Preview</Label>
+                      <div className="border rounded-lg p-4 bg-background">
+                        <div className="border-b pb-2 mb-3">
+                          <p className="text-xs text-muted-foreground">Assunto:</p>
+                          <p className="font-medium">
+                            {emailSubject
+                              .replace(/\{\{nome\}\}/g, "João Silva")
+                              .replace(/\{\{email\}\}/g, "joao@example.com")}
+                          </p>
+                        </div>
+                        <div className="whitespace-pre-wrap text-sm">
+                          {emailTemplate
+                            .replace(/\{\{nome\}\}/g, "João Silva")
+                            .replace(/\{\{email\}\}/g, "joao@example.com")}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Template de WhatsApp */}
+            {(type === "whatsapp" || type === "both") && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>📱 Template de WhatsApp</CardTitle>
+                  <CardDescription>
+                    Configure a mensagem que será enviada via WhatsApp
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Mensagem */}
+                  <div>
+                    <Label>Mensagem *</Label>
+                    <Textarea
+                      placeholder={`Olá {{nome}}! 👋\n\nTemos uma oferta especial para você...\n\nAbraços! ✨`}
+                      value={whatsappTemplate}
+                      onChange={(e) => setWhatsappTemplate(e.target.value)}
+                      rows={8}
+                      className="font-mono text-sm"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>{whatsappTemplate.length} caracteres</span>
+                      {whatsappTemplate.length > 1000 && (
+                        <span className="text-orange-500">
+                          ⚠️ Mensagem longa (recomendado: até 1000 caracteres)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Variáveis disponíveis */}
+                  <div className="bg-muted p-4 rounded-lg">
+                    <p className="font-medium text-sm mb-2">💡 Variáveis disponíveis:</p>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <code className="bg-background px-2 py-1 rounded">{"{{nome}}"}</code>
+                        <span>- Nome completo do usuário</span>
+                      </div>
+                    </div>
+                    <p className="text-xs mt-2 text-muted-foreground">
+                      💬 Dica: Use emojis para deixar a mensagem mais amigável!
+                    </p>
+                  </div>
+
+                  {/* Preview */}
+                  {whatsappTemplate && (
+                    <div>
+                      <Label className="mb-2 block">👁️ Preview</Label>
+                      <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-950">
+                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-green-200 dark:border-green-800">
+                          <MessageCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <span className="font-medium text-sm">WhatsApp</span>
+                        </div>
+                        <div className="whitespace-pre-wrap text-sm bg-white dark:bg-gray-900 p-3 rounded-lg">
+                          {whatsappTemplate.replace(/\{\{nome\}\}/g, "João Silva")}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Ações */}
             <div className="flex gap-3 justify-end">
